@@ -1,0 +1,5 @@
+// Mock libScePad.prx module
+scePadOpen
+scePadRead
+scePadSetVibration
+scePadSetLightBar

@@ -1,0 +1,23 @@
+{
+  "name": "anyport-studio",
+  "version": "1.0.0",
+  "description": "1-Click GUI Game Porter & Launcher for AnyPS5 native executable relinking",
+  "main": "main.js",
+  "scripts": {
+    "start": "node server.js",
+    "desktop": "cmd /c launch-desktop.bat",
+    "electron": "npx electron .",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "anyps5",
+    "ps5",
+    "porting",
+    "relinker",
+    "native-pc",
+    "launcher",
+    "desktop-app"
+  ],
+  "author": "AnyPort Community",
+  "license": "MIT"
+}

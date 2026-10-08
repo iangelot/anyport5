@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Environment & Logs
+.env
+*.log
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Large Game Dumps (User keeps in their local library)
+games/*-test-*
+games/verification-test-port/
+games/custom-*/
