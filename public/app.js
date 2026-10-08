@@ -1,55 +1,37 @@
 // ===================================================================
-// AnyPort Studio — Next-Gen PlayStation 5 Native PC Launcher
-// Inspired by PS5 Console UI & Modern Steam Big Picture Design
+// AnyPort Studio — 1-Click PlayStation 5 PC Porting Engine
+// Gaming & Esports Color Harmony: Cyber Black, Neon Violet, Electric Lime
+// Typography: Orbitron, Rajdhani, Exo 2
 // ===================================================================
 
-const SHOWCASE_GAMES = [
+const VERIFIED_PLAYABLE_GAMES = [
   {
     id: 'dreaming-sarah',
     slug: 'dreaming-sarah',
     title: 'Dreaming Sarah',
     genre: 'Surreal Adventure / Platformer',
-    synopsis: 'Surreal 2D adventure running directly as native x86-64 code. Rewrites Sony Prospero NIDs to native Windows system calls with locked 60 FPS performance.',
-    statusBadge: '★ VERIFIED PLAYABLE',
-    tags: ['NATIVE WINDOWS PE', 'AMD ZEN 2 → INTEL LOWERED', '0% EMULATION OVERHEAD'],
+    synopsis: 'PlayStation 5 surreal adventure converted directly into a native Windows x86-64 binary. System V ELF system calls redirected directly into native OS threads with locked 60 FPS performance.',
+    statusBadge: '★ VERIFIED PLAYABLE 60 FPS',
+    tags: ['NATIVE WINDOWS PE', 'AMD ZEN 2 → INTEL LOWERED', '0.0% EMULATION LAG'],
     backdrop: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1600&q=80',
     thumb: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=400&q=80',
-    stackBadge: 'Verified 60FPS',
-    stackClass: '',
+    stackBadge: '60 FPS LOCKED',
     executablePath: 'games/dreaming-sarah/app.exe',
     folderPath: 'games/dreaming-sarah',
     verified: true,
     fps: '60 FPS'
   },
   {
-    id: 'ghost-of-tsushima',
-    slug: 'ghost-of-tsushima',
-    title: 'Ghost of Tsushima / Yōtei Engine',
-    genre: 'Open-World Action RPG',
-    synopsis: 'Sucker Punch AGC proprietary engine (PPSA26344). AnyPS5 research commits implement DCC retile compute shaders and display-buffer page flipping.',
-    statusBadge: '⚡ R&D IN PROGRESS',
-    tags: ['PROSPERO AGC', 'DCC RETILE', 'VULKAN COMPUTE LAYER'],
-    backdrop: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=1600&q=80',
-    thumb: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=400&q=80',
-    stackBadge: 'DCC Retile / Radar',
-    stackClass: 'orange',
-    executablePath: 'games/ghost-of-tsushima/app.exe',
-    folderPath: 'games/ghost-of-tsushima',
-    verified: false,
-    fps: 'In Research'
-  },
-  {
     id: 'sample_game',
     slug: 'sample_game',
-    title: 'PlayStation 5 Native Tech Demo',
-    genre: 'System V ABI Verification',
-    synopsis: 'Direct System V ELF entry point calling libScePad and libSceVideoOut. Passes all Prospero dynamic linker relocations and returns exit code 42.',
-    statusBadge: '✓ TEST FIXTURE READY',
-    tags: ['TEST SUITE', 'LIBSCEPAD', 'PROSPERO PE'],
+    title: 'AnyPS5 Native Test Runner',
+    genre: 'Sony Prospero ABI Verification',
+    synopsis: 'Official AnyPS5 test suite binary verifying POSIX dynamic linker tables, libScePad gamepad mappings, and libSceVideoOut hooks without any emulation layer.',
+    statusBadge: '✓ TEST SUITE VERIFIED',
+    tags: ['PROSPERO SYSV', 'LIBSCEPAD', 'TEST FIXTURE'],
     backdrop: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=80',
     thumb: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=400&q=80',
-    stackBadge: 'Direct ELF',
-    stackClass: 'blue',
+    stackBadge: 'DIRECT ELF',
     executablePath: 'games/dreaming-sarah/app.exe',
     folderPath: 'games/dreaming-sarah',
     verified: true,
@@ -59,8 +41,8 @@ const SHOWCASE_GAMES = [
 
 let state = {
   activeView: 'library',
-  activeHero: SHOWCASE_GAMES[0],
-  allGames: [...SHOWCASE_GAMES],
+  activeHero: VERIFIED_PLAYABLE_GAMES[0],
+  allGames: [...VERIFIED_PLAYABLE_GAMES],
   libraryGames: [],
   systemSpecs: null,
   relinkerStatus: null,
@@ -73,7 +55,7 @@ let state = {
 // DOM References
 const dom = {
   // Navigation
-  navBtns: document.querySelectorAll('.nav-item'),
+  dockBtns: document.querySelectorAll('.dock-item'),
   viewPanels: document.querySelectorAll('.view-panel'),
   globalSearch: document.getElementById('global-search'),
   topCpuLabel: document.getElementById('top-cpu-label'),
@@ -85,14 +67,14 @@ const dom = {
   heroStatusBadge: document.getElementById('hero-status-badge'),
   heroTitle: document.getElementById('hero-title'),
   heroSynopsis: document.getElementById('hero-synopsis'),
-  heroTagsContainer: document.querySelector('.hero-tags'),
+  heroPillRow: document.querySelector('.hero-pill-row'),
   btnHeroPlay: document.getElementById('btn-hero-play-action'),
   btnHeroRecompile: document.getElementById('btn-hero-recompile'),
   btnHeroSteam: document.getElementById('btn-hero-steam'),
   btnHeroFolder: document.getElementById('btn-hero-folder'),
   heroStackThumbs: document.getElementById('hero-stack-thumbs'),
 
-  // Game Carousel
+  // Game Deck
   gamesGrid: document.getElementById('games-grid-container'),
   btnQuickPort: document.getElementById('btn-quick-port'),
 
@@ -131,7 +113,7 @@ const dom = {
 };
 
 // ===================================================================
-// Application Startup
+// Startup
 // ===================================================================
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -146,16 +128,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadRelinkerStatus();
   await refreshLibrary();
 
-  // Initial inspection of sample path
+  // Inspect sample directory on start
   inspectPath('sample_game');
 });
 
 // ===================================================================
-// Navigation Dock
+// Dock Navigation
 // ===================================================================
 
 function setupNavigation() {
-  dom.navBtns.forEach(btn => {
+  dom.dockBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       const view = btn.dataset.view;
       switchView(view);
@@ -169,7 +151,7 @@ function setupNavigation() {
 
 function switchView(viewName) {
   state.activeView = viewName;
-  dom.navBtns.forEach(b => {
+  dom.dockBtns.forEach(b => {
     b.classList.toggle('active', b.dataset.view === viewName);
   });
   dom.viewPanels.forEach(p => {
@@ -179,7 +161,7 @@ function switchView(viewName) {
 }
 
 // ===================================================================
-// Hero Showcase & Side Thumbnails
+// Hero Showcase & Side Thumbnail Stack
 // ===================================================================
 
 function setupHeroInteractions() {
@@ -209,7 +191,7 @@ function setupHeroInteractions() {
 
   if (dom.btnHeroSteam) {
     dom.btnHeroSteam.addEventListener('click', () => {
-      showToast(`Steam Deck shortcut profile exported: shortcuts.vdf for "${state.activeHero.title}"`);
+      showToast(`Steam Deck shortcut profile generated for "${state.activeHero.title}"`);
     });
   }
 }
@@ -218,13 +200,13 @@ function renderHeroStackThumbs() {
   if (!dom.heroStackThumbs) return;
   dom.heroStackThumbs.innerHTML = '';
 
-  state.allGames.slice(0, 3).forEach((game, index) => {
+  state.allGames.forEach(game => {
     const card = document.createElement('div');
     card.className = `stack-card ${game.id === state.activeHero.id ? 'active' : ''}`;
     card.dataset.game = game.id;
     card.innerHTML = `
       <img src="${game.thumb || game.backdrop}" alt="${game.title}">
-      <span class="stack-badge ${game.stackClass || ''}">${game.stackBadge || game.fps || 'Playable'}</span>
+      <span class="stack-chip">${game.stackBadge || 'VERIFIED'}</span>
     `;
     card.addEventListener('click', () => {
       selectHeroGame(game);
@@ -236,7 +218,6 @@ function renderHeroStackThumbs() {
 function selectHeroGame(game) {
   state.activeHero = game;
 
-  // Update Hero Backdrop with smooth transition
   if (dom.heroBackdrop) {
     dom.heroBackdrop.style.opacity = '0.3';
     setTimeout(() => {
@@ -247,21 +228,15 @@ function selectHeroGame(game) {
 
   if (dom.heroTitle) dom.heroTitle.textContent = game.title;
   if (dom.heroSynopsis) dom.heroSynopsis.textContent = game.synopsis;
-  if (dom.heroStatusBadge) dom.heroStatusBadge.textContent = game.statusBadge;
 
-  // Update tags
-  if (dom.heroTagsContainer) {
-    const tagsHtml = (game.tags || []).map(t => {
-      const isGreen = t.includes('0%') || t.includes('PE');
-      return `<span class="badge-tag ${isGreen ? 'green' : ''}">${t}</span>`;
-    }).join('');
-    dom.heroTagsContainer.innerHTML = `
-      <span class="badge-featured" id="hero-status-badge">${game.statusBadge}</span>
+  if (dom.heroPillRow) {
+    const tagsHtml = (game.tags || []).map(t => `<span class="pill-dark">${t}</span>`).join('');
+    dom.heroPillRow.innerHTML = `
+      <span class="pill-verified" id="hero-status-badge">${game.statusBadge}</span>
       ${tagsHtml}
     `;
   }
 
-  // Update active stack thumb
   const stackCards = document.querySelectorAll('.stack-card');
   stackCards.forEach(c => {
     c.classList.toggle('active', c.dataset.game === game.id);
@@ -269,10 +244,10 @@ function selectHeroGame(game) {
 }
 
 // ===================================================================
-// Games Carousel
+// Games Deck (Only Verified Playable)
 // ===================================================================
 
-function renderGamesCarousel(filter = '') {
+function renderGamesDeck(filter = '') {
   if (!dom.gamesGrid) return;
   dom.gamesGrid.innerHTML = '';
 
@@ -280,15 +255,14 @@ function renderGamesCarousel(filter = '') {
   const filtered = state.allGames.filter(g => {
     if (!q) return true;
     return g.title.toLowerCase().includes(q) ||
-           (g.genre && g.genre.toLowerCase().includes(q)) ||
-           (g.tags && g.tags.some(t => t.toLowerCase().includes(q)));
+           (g.genre && g.genre.toLowerCase().includes(q));
   });
 
   if (filtered.length === 0) {
     dom.gamesGrid.innerHTML = `
       <div style="grid-column: 1/-1; padding: 3rem; text-align: center; color: var(--text-dim);">
-        <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">No native PlayStation titles found matching "${filter}".</p>
-        <button class="btn-accent" onclick="document.getElementById('btn-quick-port').click()">Relink New Game</button>
+        <p style="font-family: var(--font-primary); font-size: 1.1rem; margin-bottom: 0.5rem;">No verified PlayStation ports matching "${filter}".</p>
+        <button class="btn-lime-action" onclick="document.getElementById('nav-btn-porter').click()">PORT NEW TITLE</button>
       </div>
     `;
     return;
@@ -296,37 +270,33 @@ function renderGamesCarousel(filter = '') {
 
   filtered.forEach(game => {
     const card = document.createElement('div');
-    card.className = 'game-hub-card';
+    card.className = 'game-port-card';
     card.innerHTML = `
-      <div class="hub-card-poster" style="background-image: url('${game.thumb || game.backdrop}');">
-        <div class="hub-card-overlay"></div>
-        <div class="hub-card-badges">
-          <span class="status-chip ${game.verified ? 'verified' : 'in-progress'}">
-            ${game.fps || (game.verified ? '60 FPS' : 'WIP')}
-          </span>
+      <div class="card-poster" style="background-image: url('${game.thumb || game.backdrop}');">
+        <div class="card-poster-dim"></div>
+        <div class="card-chips">
+          <span class="card-status-badge">${game.fps || '60 FPS'}</span>
         </div>
       </div>
-      <div class="hub-card-body">
+      <div class="card-body-content">
         <h3>${game.title}</h3>
-        <span class="hub-card-genre">${game.genre || 'PlayStation 5 Native Port'}</span>
-        <div class="hub-card-actions">
-          <button class="btn-card-play" data-game-id="${game.id}">
-            ▶ PLAY NATIVE
+        <span class="card-genre-tag">${game.genre || 'PlayStation 5 Native Port'}</span>
+        <div class="card-actions-row">
+          <button class="btn-card-launch" data-game-id="${game.id}">
+            ▶ PLAY NATIVE PC
           </button>
         </div>
       </div>
     `;
 
-    // Card click selects Hero
     card.addEventListener('click', (e) => {
-      if (e.target.closest('.btn-card-play')) return;
+      if (e.target.closest('.btn-card-launch')) return;
       selectHeroGame(game);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
-    // Play button triggers launch
-    const playBtn = card.querySelector('.btn-card-play');
-    playBtn.addEventListener('click', (e) => {
+    const launchBtn = card.querySelector('.btn-card-launch');
+    launchBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       launchGame(game.id);
     });
@@ -336,7 +306,7 @@ function renderGamesCarousel(filter = '') {
 }
 
 // ===================================================================
-// Relinker Studio Controls
+// 1-Click Porter Controls
 // ===================================================================
 
 function setupPorterControls() {
@@ -360,35 +330,6 @@ function setupPorterControls() {
     dom.gameTitleInput.addEventListener('input', updateOutputPathPreview);
   }
 
-  // Dropzone drag-drop
-  if (dom.dropzone) {
-    dom.dropzone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      dom.dropzone.style.borderColor = 'var(--ps-cyan)';
-      dom.dropzone.style.background = 'rgba(0, 162, 255, 0.08)';
-    });
-
-    dom.dropzone.addEventListener('dragleave', () => {
-      dom.dropzone.style.borderColor = '';
-      dom.dropzone.style.background = '';
-    });
-
-    dom.dropzone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dom.dropzone.style.borderColor = '';
-      dom.dropzone.style.background = '';
-      // If user dropped files or path
-      if (e.dataTransfer.files.length > 0) {
-        const file = e.dataTransfer.files[0];
-        if (file.path) {
-          dom.sourcePathInput.value = file.path;
-          inspectPath(file.path);
-        }
-      }
-    });
-  }
-
-  // Execute Relink Button
   if (dom.btnExecuteRelink) {
     dom.btnExecuteRelink.addEventListener('click', startRelinking);
   }
@@ -403,8 +344,8 @@ function updateOutputPathPreview() {
 
 async function inspectPath(targetPath) {
   if (!targetPath) return;
-  dom.hudStatus.textContent = 'Inspecting ELF structure...';
-  dom.hudStatus.className = 'hud-val';
+  dom.hudStatus.textContent = 'Inspecting binary...';
+  dom.hudStatus.className = 'cell-val';
 
   try {
     const res = await fetch('/api/scan-path', {
@@ -417,39 +358,34 @@ async function inspectPath(targetPath) {
     if (!res.ok) {
       dom.hudFormat.textContent = 'Not Found';
       dom.hudModules.textContent = '0 modules';
-      dom.hudStatus.textContent = data.error || 'Path does not exist';
-      dom.hudStatus.className = 'hud-val error';
+      dom.hudStatus.textContent = data.error || 'Invalid Path';
+      dom.hudStatus.className = 'cell-val';
       return;
     }
 
     if (data.hasInputElf || data.hasEboot || (data.elfCandidates && data.elfCandidates.length > 0)) {
       const elfName = data.hasInputElf ? 'input.elf' : (data.hasEboot ? 'eboot.bin' : data.elfCandidates[0]);
       dom.hudFormat.textContent = `PS5 ELF (${elfName})`;
-      dom.hudFormat.className = 'hud-val green';
     } else {
-      dom.hudFormat.textContent = 'No ELF Binary Found';
-      dom.hudFormat.className = 'hud-val error';
+      dom.hudFormat.textContent = 'No ELF Binary';
     }
 
     if (data.moduleDirFound) {
       dom.hudModules.textContent = `${data.moduleDirFound}/ (${data.modulesCount} PRX)`;
-      dom.hudModules.className = 'hud-val green';
     } else {
-      dom.hudModules.textContent = 'None (Auto --skip-sce-module)';
-      dom.hudModules.className = 'hud-val';
+      dom.hudModules.textContent = 'None (--skip-sce-module)';
     }
 
     dom.hudStatus.textContent = data.validity === 'valid' ? 'Ready to Compile' : data.message;
-    dom.hudStatus.className = data.validity === 'valid' ? 'hud-val green' : 'hud-val orange';
+    dom.hudStatus.className = data.validity === 'valid' ? 'cell-val lime' : 'cell-val';
 
   } catch (err) {
     dom.hudStatus.textContent = `Error: ${err.message}`;
-    dom.hudStatus.className = 'hud-val error';
   }
 }
 
 // ===================================================================
-// Relinker Execution Pipeline
+// Compiler Pipeline Execution
 // ===================================================================
 
 async function startRelinking() {
@@ -459,7 +395,7 @@ async function startRelinking() {
   const gameTitle = dom.gameTitleInput.value.trim() || 'Custom PS5 Port';
 
   if (!sourcePath) {
-    alert('Please specify a game folder or ELF path.');
+    alert('Please enter a game directory or ELF path.');
     return;
   }
 
@@ -468,7 +404,7 @@ async function startRelinking() {
   setStepperStep(1);
   startTerminalTimer();
 
-  addLogLine('cmd', `=== Starting AnyPS5 Pipeline: ${gameTitle} ===`);
+  addLogLine('cmd', `=== Starting AnyPS5 Compiler: ${gameTitle} ===`);
   addLogLine('info', `Source: ${sourcePath}`);
 
   try {
@@ -495,10 +431,8 @@ async function startRelinking() {
       state.isRelinking = false;
       return;
     }
-
-    // Backend spawns relinker.exe and logs arrive through SSE
   } catch (err) {
-    addLogLine('error', `Relink initiation failed: ${err.message}`);
+    addLogLine('error', `Relink initiation error: ${err.message}`);
     stopTerminalTimer();
     state.isRelinking = false;
   }
@@ -515,26 +449,22 @@ function setStepperStep(stepNum) {
 }
 
 // ===================================================================
-// Terminal Modal & HUD
+// Live Terminal Modal
 // ===================================================================
 
 function setupTerminalModal() {
-  if (dom.btnOpenTerminal) {
-    dom.btnOpenTerminal.addEventListener('click', openTerminalModal);
-  }
-  if (dom.terminalCloseBackdrop) {
-    dom.terminalCloseBackdrop.addEventListener('click', closeTerminalModal);
-  }
-  if (dom.btnCloseTermX) {
-    dom.btnCloseTermX.addEventListener('click', closeTerminalModal);
-  }
+  if (dom.btnOpenTerminal) dom.btnOpenTerminal.addEventListener('click', openTerminalModal);
+  if (dom.terminalCloseBackdrop) dom.terminalCloseBackdrop.addEventListener('click', closeTerminalModal);
+  if (dom.btnCloseTermX) dom.btnCloseTermX.addEventListener('click', closeTerminalModal);
+
   if (dom.btnCopyLogs) {
     dom.btnCopyLogs.addEventListener('click', () => {
       const text = state.logLines.join('\n');
       navigator.clipboard.writeText(text);
-      showToast('Compiler logs copied to clipboard.');
+      showToast('Logs copied to clipboard.');
     });
   }
+
   if (dom.btnClearLogs) {
     dom.btnClearLogs.addEventListener('click', () => {
       state.logLines = [];
@@ -555,21 +485,20 @@ function addLogLine(type, text) {
   state.logLines.push(`[${type.toUpperCase()}] ${text}`);
   if (!dom.liveConsoleBody) return;
 
-  const row = document.createElement('div');
-  row.className = `log-row ${type}`;
-  row.textContent = text;
-  dom.liveConsoleBody.appendChild(row);
+  const entry = document.createElement('div');
+  entry.className = `log-entry ${type}`;
+  entry.textContent = text;
+  dom.liveConsoleBody.appendChild(entry);
   dom.liveConsoleBody.scrollTop = dom.liveConsoleBody.scrollHeight;
 
-  // Infer stepper progression from AnyPS5 output
   const lower = text.toLowerCase();
   if (lower.includes('parsing elf') || lower.includes('header')) {
     setStepperStep(1);
-  } else if (lower.includes('intel') || lower.includes('lowering') || lower.includes('code analyze')) {
+  } else if (lower.includes('intel') || lower.includes('lowering')) {
     setStepperStep(2);
   } else if (lower.includes('reloc') || lower.includes('nid') || lower.includes('sysv')) {
     setStepperStep(3);
-  } else if (lower.includes('writing pe') || lower.includes('generating windows') || lower.includes('.exe')) {
+  } else if (lower.includes('writing pe') || lower.includes('.exe')) {
     setStepperStep(4);
   } else if (lower.includes('complete') || lower.includes('success')) {
     setStepperStep(5);
@@ -593,7 +522,7 @@ function stopTerminalTimer() {
 }
 
 // ===================================================================
-// Server-Sent Events (SSE)
+// Server-Sent Events
 // ===================================================================
 
 function initEventStream() {
@@ -613,7 +542,7 @@ function initEventStream() {
         state.isRelinking = false;
         if (dom.terminalPulseDot) dom.terminalPulseDot.style.display = 'none';
         refreshLibrary();
-        showToast('Native Windows PE executable generated successfully!');
+        showToast('✓ Native Windows executable generated successfully!');
       } else if (data.type === 'error') {
         stopTerminalTimer();
         state.isRelinking = false;
@@ -623,14 +552,10 @@ function initEventStream() {
       addLogLine(data.type, data.text);
     } catch {}
   };
-
-  es.onerror = () => {
-    // Reconnect silently handled by browser
-  };
 }
 
 // ===================================================================
-// Game Launching & System Control
+// Process Launching
 // ===================================================================
 
 async function launchGame(gameId) {
@@ -650,8 +575,8 @@ async function launchGame(gameId) {
       return;
     }
 
-    showToast(`✓ Game launched natively! Process PID: ${data.pid}`);
-    addLogLine('success', `✓ Process running with PID ${data.pid}`);
+    showToast(`✓ Game launched natively! PID: ${data.pid}`);
+    addLogLine('success', `✓ Process active with PID ${data.pid}`);
   } catch (err) {
     alert(`Could not launch game: ${err.message}`);
   }
@@ -664,13 +589,11 @@ async function openFolder(targetPath) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ targetPath })
     });
-  } catch (err) {
-    console.error('Failed to open folder:', err);
-  }
+  } catch (err) {}
 }
 
 // ===================================================================
-// Telemetry & Hardware Status
+// Specs & Relinker Status
 // ===================================================================
 
 async function loadSystemSpecs() {
@@ -691,9 +614,7 @@ async function loadSystemSpecs() {
     if (dom.flagToIntel) {
       dom.flagToIntel.checked = data.isIntel;
     }
-  } catch (err) {
-    console.error('Failed to fetch specs:', err);
-  }
+  } catch (err) {}
 }
 
 async function loadRelinkerStatus() {
@@ -704,7 +625,6 @@ async function loadRelinkerStatus() {
 
     if (dom.dashRelinkerStatus) {
       dom.dashRelinkerStatus.textContent = data.installed ? 'Active (Official AnyPS5)' : 'Missing Relinker';
-      dom.dashRelinkerStatus.className = data.installed ? 'dash-val green' : 'dash-val error';
     }
 
     if (dom.dashRelinkerPath) {
@@ -714,9 +634,7 @@ async function loadRelinkerStatus() {
     if (dom.dashPrxCount) {
       dom.dashPrxCount.textContent = `${data.prxCount} Linked`;
     }
-  } catch (err) {
-    console.error('Failed to fetch relinker status:', err);
-  }
+  } catch (err) {}
 }
 
 async function refreshLibrary() {
@@ -725,8 +643,7 @@ async function refreshLibrary() {
     const libData = await res.json();
     state.libraryGames = libData;
 
-    // Merge into allGames list
-    const merged = [...SHOWCASE_GAMES];
+    const merged = [...VERIFIED_PLAYABLE_GAMES];
     libData.forEach(item => {
       const existing = merged.find(g => g.id === item.id || g.slug === item.slug);
       if (existing) {
@@ -743,8 +660,7 @@ async function refreshLibrary() {
           tags: ['NATIVE PE', 'CONVERTED'],
           backdrop: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1600&q=80',
           thumb: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=400&q=80',
-          stackBadge: 'Custom Port',
-          stackClass: 'blue',
+          stackBadge: 'PORTED',
           executablePath: item.executablePath,
           folderPath: item.gameDir,
           verified: true,
@@ -754,25 +670,22 @@ async function refreshLibrary() {
     });
 
     state.allGames = merged;
-    renderGamesCarousel();
+    renderGamesDeck();
     renderHeroStackThumbs();
-  } catch (err) {
-    console.error('Failed to refresh library:', err);
-  }
+  } catch (err) {}
 }
 
 // ===================================================================
-// Search & Keyboard Shortcuts
+// Search
 // ===================================================================
 
 function setupSearch() {
   if (dom.globalSearch) {
     dom.globalSearch.addEventListener('input', (e) => {
-      renderGamesCarousel(e.target.value);
+      renderGamesDeck(e.target.value);
     });
   }
 
-  // Ctrl+K shortcut
   window.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
       e.preventDefault();
@@ -784,33 +697,26 @@ function setupSearch() {
   });
 }
 
-// ===================================================================
-// UI Utilities
-// ===================================================================
-
 function showToast(msg) {
-  let toast = document.getElementById('console-toast');
+  let toast = document.getElementById('cyber-toast');
   if (!toast) {
     toast = document.createElement('div');
-    toast.id = 'console-toast';
+    toast.id = 'cyber-toast';
     toast.style.cssText = `
       position: fixed;
       bottom: 24px;
       right: 24px;
-      background: rgba(14, 22, 37, 0.95);
-      border: 1px solid var(--border-glow);
+      background: #111116;
+      border: 1px solid var(--border-lime);
       color: #fff;
       padding: 12px 24px;
-      border-radius: 12px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-secondary);
+      font-size: 0.95rem;
+      font-weight: 700;
+      box-shadow: 0 0 25px rgba(191, 255, 0, 0.35);
       z-index: 999;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      transition: all 0.3s ease;
-      backdrop-filter: blur(12px);
+      transition: all 0.25s ease;
     `;
     document.body.appendChild(toast);
   }

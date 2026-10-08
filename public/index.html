@@ -3,294 +3,282 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AnyPort Studio — PlayStation 5 Native PC Launcher</title>
-  <meta name="description" content="Next-Gen 1-Click Game Converter & Launcher for AnyPS5 Native Executable Relinking.">
+  <title>AnyPort Studio — 1-Click PlayStation 5 PC Porting Engine</title>
+  <meta name="description" content="1-Click Game Porter and Native PC Launcher for AnyPS5 binary relinking.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Orbitron:wght@400;600;700;800;900&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="app.css">
 </head>
-<body class="console-body">
-  <div class="console-app">
+<body class="cyber-body">
+  <div class="cyber-app">
     
-    <!-- Top Navigation Bar (Reference 1 & 2 inspired) -->
-    <header class="console-topbar">
+    <!-- Topbar Navigation -->
+    <header class="cyber-topbar">
       <div class="topbar-left">
-        <div class="console-brand">
-          <div class="brand-glyph">
-            <svg viewBox="0 0 24 24" fill="none" class="glyph-svg"><polygon points="6 3 20 12 6 21 6 3" fill="currentColor"/></svg>
-            <span class="ps-version">5</span>
+        <div class="cyber-brand">
+          <div class="brand-cube">
+            <span class="cube-text">PS5</span>
           </div>
-          <div class="brand-titles">
-            <span class="brand-name">ANYPORT <span class="brand-accent">STUDIO</span></span>
-            <span class="brand-tag">PS5 NATIVE ENGINE</span>
+          <div class="brand-text">
+            <span class="brand-main">ANYPORT<span class="brand-lime">.EXE</span></span>
+            <span class="brand-sub">NATIVE ZERO-EMULATION ENGINE</span>
           </div>
         </div>
       </div>
 
       <div class="topbar-center">
-        <div class="search-pill">
-          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="global-search" placeholder="Search native PlayStation titles, NID tables, or local dumps...">
-          <kbd class="search-kbd">Ctrl+K</kbd>
+        <div class="cyber-search">
+          <svg class="search-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="global-search" placeholder="Search verified playable PS5 ports, NID tables...">
+          <kbd class="kbd-badge">Ctrl+K</kbd>
         </div>
       </div>
 
       <div class="topbar-right">
-        <!-- Hardware Telemetry Badge -->
-        <div class="hw-chip" id="top-hw-chip">
-          <span class="hw-dot pulse"></span>
-          <span class="hw-label" id="top-cpu-label">Intel Zen 2 Lowering Active</span>
+        <!-- Hardware Telemetry -->
+        <div class="telemetry-pill" id="top-hw-chip">
+          <span class="telemetry-dot"></span>
+          <span class="telemetry-label" id="top-cpu-label">Intel Zen 2 Lowering Active</span>
         </div>
 
-        <button class="icon-round-btn" id="btn-open-terminal" title="Live Relinker Terminal">
+        <button class="cyber-icon-btn" id="btn-open-terminal" title="Live Relinker Terminal">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
-          <span class="noti-badge" id="terminal-pulse-dot" style="display:none;"></span>
+          <span class="terminal-ping" id="terminal-pulse-dot" style="display:none;"></span>
         </button>
 
-        <div class="user-profile-pill">
-          <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80" alt="Avatar" class="avatar-img">
-          <div class="user-info">
-            <span class="user-name">Idris</span>
-            <span class="user-role">Vibecoder</span>
+        <div class="user-chip">
+          <div class="user-avatar">AP</div>
+          <div class="user-meta">
+            <span class="u-name">Idris</span>
+            <span class="u-badge">Creator Mode</span>
           </div>
         </div>
       </div>
     </header>
 
-    <!-- Main Workspace with Sidebar Navigation -->
-    <div class="console-layout">
+    <!-- Main Workspace with Dock -->
+    <div class="cyber-workspace">
       
-      <!-- Sleek Left Sidebar Dock -->
-      <aside class="console-sidebar">
-        <nav class="sidebar-nav">
-          <button class="nav-item active" data-view="library" id="nav-btn-library">
-            <div class="nav-icon-box">
+      <!-- Cyber Sidebar Dock -->
+      <aside class="cyber-sidebar">
+        <nav class="dock-nav">
+          <button class="dock-item active" data-view="library" id="nav-btn-library">
+            <div class="dock-ico">
               <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4-3c-.83 0-1.5-.67-1.5-1.5S18.67 9 19.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
             </div>
-            <span class="nav-label">Game Hub</span>
+            <span class="dock-lbl">PORT HUB</span>
           </button>
 
-          <button class="nav-item" data-view="porter" id="nav-btn-porter">
-            <div class="nav-icon-box">
+          <button class="dock-item" data-view="porter" id="nav-btn-porter">
+            <div class="dock-ico">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
             </div>
-            <span class="nav-label">Relink Studio</span>
+            <span class="dock-lbl">1-CLICK PORTER</span>
           </button>
 
-          <button class="nav-item" data-view="radar" id="nav-btn-radar">
-            <div class="nav-icon-box">
+          <button class="dock-item" data-view="radar" id="nav-btn-radar">
+            <div class="dock-ico">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20M2 12h20"/></svg>
             </div>
-            <span class="nav-label">NID Radar</span>
+            <span class="dock-lbl">ABI RADAR</span>
           </button>
 
-          <button class="nav-item" data-view="settings" id="nav-btn-settings">
-            <div class="nav-icon-box">
+          <button class="dock-item" data-view="settings" id="nav-btn-settings">
+            <div class="dock-ico">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
             </div>
-            <span class="nav-label">Engine Config</span>
+            <span class="dock-lbl">ENGINE CONFIG</span>
           </button>
         </nav>
 
-        <div class="sidebar-footer">
-          <div class="prx-counter-pill">
-            <span class="counter-num">101</span>
-            <span class="counter-text">PRX Linked</span>
+        <div class="dock-bottom-chip">
+          <div class="prx-stat">
+            <span class="prx-num">101</span>
+            <span class="prx-tag">NATIVE PRX LIBS</span>
           </div>
         </div>
       </aside>
 
       <!-- Main Stage -->
-      <main class="console-main">
+      <main class="cyber-main">
 
-        <!-- ================= VIEW 1: GAME HUB (HERO + CAROUSEL) ================= -->
+        <!-- ================= VIEW 1: PORT HUB (VERIFIED GAMES ONLY) ================= -->
         <section class="view-panel active" id="view-library">
           
-          <!-- Cinematic Hero Banner (Reference 2 style) -->
-          <div class="hero-showcase" id="hero-banner">
-            <div class="hero-backdrop" id="hero-backdrop-img"></div>
-            <div class="hero-overlay-gradient"></div>
+          <!-- Cinematic Hero Showcase -->
+          <div class="cyber-hero" id="hero-banner">
+            <div class="hero-bg-layer" id="hero-backdrop-img"></div>
+            <div class="hero-vignette"></div>
 
-            <div class="hero-content">
-              <div class="hero-tags">
-                <span class="badge-featured" id="hero-status-badge">★ VERIFIED PLAYABLE</span>
-                <span class="badge-tag">NATIVE WINDOWS PE</span>
-                <span class="badge-tag">AMD ZEN 2 → INTEL LOWERED</span>
-                <span class="badge-tag green">0% EMULATION OVERHEAD</span>
+            <div class="hero-text-block">
+              <div class="hero-pill-row">
+                <span class="pill-verified" id="hero-status-badge">★ VERIFIED PLAYABLE 60 FPS</span>
+                <span class="pill-dark">NATIVE WINDOWS PE</span>
+                <span class="pill-violet">AMD ZEN 2 → INTEL LOWERED</span>
+                <span class="pill-lime">0.0% EMULATION LAG</span>
               </div>
 
-              <h1 class="hero-title" id="hero-title">Dreaming Sarah</h1>
-              <p class="hero-synopsis" id="hero-synopsis">
-                Surreal 2D adventure running directly as native x86-64 code. Rewrites Sony Prospero NIDs to native Windows system calls with locked 60 FPS performance.
+              <h1 class="hero-heading" id="hero-title">Dreaming Sarah</h1>
+              <p class="hero-desc" id="hero-synopsis">
+                PlayStation 5 surreal adventure converted directly into a native Windows x86-64 binary. System V ELF system calls redirected directly into native OS threads.
               </p>
 
-              <div class="hero-actions">
-                <button class="btn-hero-play" id="btn-hero-play-action">
-                  <svg class="play-icon" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                  PLAY NATIVE
+              <div class="hero-cta-row">
+                <button class="btn-lime-launch" id="btn-hero-play-action">
+                  <svg class="cta-svg" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  PLAY NATIVE PC PORT
                 </button>
 
-                <button class="btn-hero-secondary" id="btn-hero-recompile">
+                <button class="btn-violet-relink" id="btn-hero-recompile">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-                  RE-LINK GAME
+                  RE-LINK BINARY
                 </button>
 
-                <button class="btn-hero-icon" id="btn-hero-steam" title="Export to Steam / Steam Deck">
+                <button class="btn-icon-square" id="btn-hero-steam" title="Export Steam Shortcut">
                   <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm-1.8 14.8a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 1-2l2.3 1.2a1.7 1.7 0 1 0 2.2-2.2l-1.2-2.3a2.5 2.5 0 0 1 2-1 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5z"/></svg>
                 </button>
 
-                <button class="btn-hero-icon" id="btn-hero-folder" title="Open Executable Folder">
+                <button class="btn-icon-square" id="btn-hero-folder" title="Open Game Folder">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
                 </button>
               </div>
             </div>
 
-            <!-- Side Thumbnails Stack (Reference 2 style) -->
-            <div class="hero-stack" id="hero-stack-thumbs">
-              <div class="stack-card active" data-game="dreaming-sarah">
-                <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=400&q=80" alt="Dreaming Sarah">
-                <span class="stack-badge">Verified 60FPS</span>
-              </div>
-              <div class="stack-card" data-game="ghost-of-tsushima">
-                <img src="https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=400&q=80" alt="Ghost of Tsushima">
-                <span class="stack-badge orange">DCC Retile / Radar</span>
-              </div>
-              <div class="stack-card" data-game="ps5-tech-demo">
-                <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=400&q=80" alt="PS5 Tech Demo">
-                <span class="stack-badge blue">Direct ELF</span>
-              </div>
+            <!-- Side Thumbnail Switcher -->
+            <div class="hero-side-stack" id="hero-stack-thumbs">
+              <!-- Rendered dynamically -->
             </div>
           </div>
 
-          <!-- Section: Native PlayStation Game Library Carousel -->
-          <div class="carousel-section">
-            <div class="section-heading">
-              <div class="heading-title-group">
-                <h2>Native PlayStation Titles</h2>
-                <span class="heading-subtitle">Relinked with official AnyPS5 compiler into native Windows executables</span>
+          <!-- Section: Verified Playable Titles Carousel -->
+          <div class="library-deck">
+            <div class="deck-header">
+              <div class="deck-title-group">
+                <h2>VERIFIED PLAYABLE PORTS</h2>
+                <span class="deck-subtitle">Only 100% verified executable native ports. No unplayable mockups or fake stubs.</span>
               </div>
-              <button class="btn-header-action" id="btn-quick-port">+ Relink New Title</button>
+              <button class="btn-lime-outline" id="btn-quick-port">+ PORT NEW TITLE</button>
             </div>
 
-            <div class="games-carousel" id="games-grid-container">
+            <div class="games-deck-grid" id="games-grid-container">
               <!-- Cards rendered dynamically -->
             </div>
           </div>
         </section>
 
-        <!-- ================= VIEW 2: RELINK STUDIO (1-CLICK COMPILER) ================= -->
+        <!-- ================= VIEW 2: 1-CLICK PORTER STUDIO ================= -->
         <section class="view-panel" id="view-porter">
-          <div class="porter-layout-container">
-            <div class="studio-header">
+          <div class="porter-studio-wrap">
+            <div class="studio-header-bar">
               <div>
-                <h2>AnyPS5 Binary Relinker Studio</h2>
-                <p>Convert decrypted PlayStation 5 ELF executables into native Windows PE (.exe) binaries.</p>
+                <h2>1-CLICK RELINKER STUDIO</h2>
+                <p>Convert decrypted PlayStation 5 ELF executables into native Windows PE (.exe) binaries with the official AnyPS5 compiler.</p>
               </div>
-              <button class="btn-accent" id="btn-load-verified-sample">⚡ Load Verified Working Sample</button>
+              <button class="btn-lime-action" id="btn-load-verified-sample">⚡ LOAD VERIFIED WORKING SAMPLE</button>
             </div>
 
-            <div class="studio-two-col">
-              <!-- Left Column: Source Dropzone & Inspection -->
-              <div class="studio-card">
-                <div class="card-bar">
-                  <h3>1. Game Source Executable</h3>
-                  <span class="step-num">Step 1</span>
+            <div class="studio-grid-layout">
+              <!-- Step 1: Input -->
+              <div class="cyber-panel">
+                <div class="panel-tag-bar">
+                  <span class="panel-step-badge">STEP 01</span>
+                  <h3>GAME SOURCE EXECUTABLE</h3>
                 </div>
 
-                <div class="console-dropzone" id="console-dropzone">
-                  <div class="dropzone-glow"></div>
-                  <div class="drop-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                <div class="cyber-drop-target" id="console-dropzone">
+                  <div class="drop-pulse"></div>
+                  <div class="drop-icon-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
                   </div>
-                  <h3>Drop Decrypted Game Folder or ELF</h3>
-                  <p>Point to a directory containing <code>input.elf</code> (or <code>eboot.bin</code>)</p>
-                  
-                  <div class="path-input-wrapper">
-                    <input type="text" id="studio-source-path" value="sample_game" placeholder="e.g. C:\Games\PS5Dumps\MyGame">
-                    <button class="btn-inspect" id="btn-studio-inspect">Inspect</button>
-                  </div>
-                </div>
+                  <h4>SELECT DECRYPTED GAME DIRECTORY</h4>
+                  <p>Folder must contain <code>input.elf</code> or <code>eboot.bin</code></p>
 
-                <!-- Inspection HUD -->
-                <div class="inspection-hud" id="inspection-hud">
-                  <div class="hud-item">
-                    <span class="hud-label">Format:</span>
-                    <strong class="hud-val" id="hud-format">x86-64 System V ELF</strong>
-                  </div>
-                  <div class="hud-item">
-                    <span class="hud-label">Bundled Modules:</span>
-                    <strong class="hud-val" id="hud-modules">sce_module/ Verified</strong>
-                  </div>
-                  <div class="hud-item">
-                    <span class="hud-label">Status:</span>
-                    <strong class="hud-val green" id="hud-status">Ready to Compile</strong>
+                  <div class="input-line-wrap">
+                    <input type="text" id="studio-source-path" value="sample_game" placeholder="e.g. C:\Games\PS5\MyGame">
+                    <button class="btn-scan" id="btn-studio-inspect">INSPECT</button>
                   </div>
                 </div>
 
-                <div class="meta-inputs">
-                  <label>Game Title</label>
+                <!-- Live Hardware Inspection -->
+                <div class="inspection-matrix">
+                  <div class="matrix-cell">
+                    <span class="cell-lbl">BINARY TYPE</span>
+                    <strong class="cell-val" id="hud-format">x86-64 System V ELF</strong>
+                  </div>
+                  <div class="matrix-cell">
+                    <span class="cell-lbl">PRX MODULES</span>
+                    <strong class="cell-val" id="hud-modules">sce_module/ Verified</strong>
+                  </div>
+                  <div class="matrix-cell">
+                    <span class="cell-lbl">STATUS</span>
+                    <strong class="cell-val lime" id="hud-status">Ready to Compile</strong>
+                  </div>
+                </div>
+
+                <div class="meta-field">
+                  <label>OUTPUT PORT TITLE</label>
                   <input type="text" id="studio-game-title" value="Dreaming Sarah (Native PC Port)">
                 </div>
               </div>
 
-              <!-- Right Column: Compiler Flags & Execution -->
-              <div class="studio-card">
-                <div class="card-bar">
-                  <h3>2. Compiler Optimization Flags</h3>
-                  <span class="step-num">Step 2</span>
+              <!-- Step 2: Compiler Optimization Flags -->
+              <div class="cyber-panel">
+                <div class="panel-tag-bar">
+                  <span class="panel-step-badge violet">STEP 02</span>
+                  <h3>HARDWARE OPTIMIZATIONS</h3>
                 </div>
 
-                <div class="flags-list">
-                  <div class="flag-item">
-                    <div class="flag-info">
+                <div class="flags-matrix">
+                  <div class="flag-row">
+                    <div class="flag-desc">
                       <strong>Lower AMD Zen 2 Instructions (<code>--to-intel</code>)</strong>
-                      <span>Lowers AMD-only opcodes so the game boots flawlessly on Intel host processors.</span>
+                      <span>Rewrites AMD-specific opcodes so the game boots flawlessly on Intel host processors.</span>
                     </div>
-                    <label class="toggle-switch">
+                    <label class="cyber-switch">
                       <input type="checkbox" id="flag-to-intel" checked>
-                      <span class="toggle-slider"></span>
+                      <span class="cyber-switch-slider"></span>
                     </label>
                   </div>
 
-                  <div class="flag-item">
-                    <div class="flag-info">
+                  <div class="flag-row">
+                    <div class="flag-desc">
                       <strong>Windows GUI Subsystem (<code>--windows-gui</code>)</strong>
-                      <span>Direct game window rendering without launching a background cmd window.</span>
+                      <span>Direct game window rendering without opening a background console window.</span>
                     </div>
-                    <label class="toggle-switch">
+                    <label class="cyber-switch">
                       <input type="checkbox" id="flag-gui" checked>
-                      <span class="toggle-slider"></span>
+                      <span class="cyber-switch-slider"></span>
                     </label>
                   </div>
 
-                  <div class="flag-item">
-                    <div class="flag-info">
+                  <div class="flag-row">
+                    <div class="flag-desc">
                       <strong>Startup Diagnostics (<code>--windows-diagnostics</code>)</strong>
                       <span>Logs early PRX module loads and NID resolutions to console output.</span>
                     </div>
-                    <label class="toggle-switch">
+                    <label class="cyber-switch">
                       <input type="checkbox" id="flag-diag">
-                      <span class="toggle-slider"></span>
+                      <span class="cyber-switch-slider"></span>
                     </label>
                   </div>
 
-                  <div class="flag-item">
-                    <div class="flag-info">
+                  <div class="flag-row">
+                    <div class="flag-desc">
                       <strong>PRX System Library Path (<code>--rpath</code>)</strong>
                       <span>Location of official AnyPS5 101 PRX system libraries.</span>
                     </div>
-                    <input type="text" id="flag-rpath" value="$ORIGIN/libs" class="flag-text-input">
+                    <input type="text" id="flag-rpath" value="$ORIGIN/libs" class="flag-box-input">
                   </div>
                 </div>
 
-                <div class="compile-cta-box">
-                  <div class="output-preview">
-                    <span>Output:</span>
+                <div class="relink-action-block">
+                  <div class="preview-target">
+                    <span>Target:</span>
                     <code id="preview-output-path">games/dreaming-sarah/app.exe</code>
                   </div>
 
-                  <button class="btn-compile-huge" id="btn-execute-relink">
+                  <button class="btn-compile-lime" id="btn-execute-relink">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                     COMPILE NATIVE WINDOWS EXECUTABLE
                   </button>
@@ -300,50 +288,50 @@
           </div>
         </section>
 
-        <!-- ================= VIEW 3: NID RADAR ================= -->
+        <!-- ================= VIEW 3: ABI RADAR ================= -->
         <section class="view-panel" id="view-radar">
           <div class="radar-container">
-            <div class="studio-header">
+            <div class="studio-header-bar">
               <div>
-                <h2>PlayStation 5 Compatibility Radar</h2>
-                <p>Tracking the status of commercial PS5 titles against AnyPS5's 101 PRX modules.</p>
+                <h2>ANYPS5 COMPILER ABI RADAR</h2>
+                <p>Tracking the compatibility status of Sony Prospero system APIs against AnyPS5's 101 PRX modules.</p>
               </div>
             </div>
 
-            <div class="radar-grid">
+            <div class="radar-deck">
               <div class="radar-card verified">
-                <div class="radar-card-header">
+                <div class="rc-header">
                   <h3>Dreaming Sarah</h3>
-                  <span class="status-chip verified">60 FPS Locked</span>
+                  <span class="rc-badge lime">VERIFIED PLAYABLE</span>
                 </div>
                 <p>2D surreal adventure. Officially verified by the AnyPS5 team. Full AGC graphics pass and input hooks operational.</p>
-                <div class="radar-stats">
+                <div class="rc-footer">
                   <span>Target: PPSA02929</span>
-                  <span>Overhead: 0.0%</span>
+                  <span>Exit: 42 (OK)</span>
+                </div>
+              </div>
+
+              <div class="radar-card verified">
+                <div class="rc-header">
+                  <h3>AnyPS5 Native Test Runner</h3>
+                  <span class="rc-badge lime">VERIFIED PLAYABLE</span>
+                </div>
+                <p>System V ELF test suite validating POSIX relocations, libScePad gamepad mappings, and dynamic section translation.</p>
+                <div class="rc-footer">
+                  <span>Target: System V Prospero</span>
+                  <span>Exit: 0 (OK)</span>
                 </div>
               </div>
 
               <div class="radar-card active">
-                <div class="radar-card-header">
-                  <h3>Ghost of Tsushima / Yōtei Engine</h3>
-                  <span class="status-chip in-progress">In Active R&D</span>
+                <div class="rc-header">
+                  <h3>Sucker Punch Engine (Ghost)</h3>
+                  <span class="rc-badge violet">IN ACTIVE R&D</span>
                 </div>
-                <p>Sucker Punch Engine (PPSA26344). Recent AnyPS5 commits implement DCC retile kernels and fast-cleared clear-key display buffer flips.</p>
-                <div class="radar-stats">
+                <p>Researching DCC retile compute shaders and display-buffer page flipping. Marked as experimental research in AnyPS5.</p>
+                <div class="rc-footer">
                   <span>Target: Sucker Punch AGC</span>
                   <span>Status: Commit #903</span>
-                </div>
-              </div>
-
-              <div class="radar-card standby">
-                <div class="radar-card-header">
-                  <h3>Bloodborne</h3>
-                  <span class="status-chip planned">Community Radar</span>
-                </div>
-                <p>Targeted via backward-compatibility Prospero layer. Relinks clean; waiting on complete compute shader translation for complex lighting.</p>
-                <div class="radar-stats">
-                  <span>Target: CUSA00207</span>
-                  <span>Status: Tracked</span>
                 </div>
               </div>
             </div>
@@ -352,30 +340,30 @@
 
         <!-- ================= VIEW 4: ENGINE SETTINGS ================= -->
         <section class="view-panel" id="view-settings">
-          <div class="settings-container">
-            <div class="studio-header">
+          <div class="settings-wrap">
+            <div class="studio-header-bar">
               <div>
-                <h2>AnyPS5 Native Engine Status</h2>
+                <h2>ANYPS5 NATIVE ENGINE TELEMETRY</h2>
                 <p>Official compiler core & native PRX dynamic linking runtime.</p>
               </div>
             </div>
 
-            <div class="status-dashboard-grid">
-              <div class="dash-card">
-                <span class="dash-label">COMPILER BINARY</span>
-                <h3 class="dash-val green" id="dash-relinker-status">Active (Production)</h3>
+            <div class="telemetry-grid">
+              <div class="telemetry-card">
+                <span class="t-label">COMPILER BINARY</span>
+                <h3 class="t-val lime" id="dash-relinker-status">Active (Production)</h3>
                 <code id="dash-relinker-path">bin/relinker.exe</code>
               </div>
 
-              <div class="dash-card">
-                <span class="dash-label">NATIVE PRX LIBRARIES</span>
-                <h3 class="dash-val blue" id="dash-prx-count">101 Linked</h3>
+              <div class="telemetry-card">
+                <span class="t-label">NATIVE PRX LIBRARIES</span>
+                <h3 class="t-val violet" id="dash-prx-count">101 Linked</h3>
                 <span>AudioOut, Pad, VideoOut, AgcDriver, SaveData</span>
               </div>
 
-              <div class="dash-card">
-                <span class="dash-label">HOST PROCESSOR</span>
-                <h3 class="dash-val purple" id="dash-cpu-model">Detecting...</h3>
+              <div class="telemetry-card">
+                <span class="t-label">HOST PROCESSOR</span>
+                <h3 class="t-val white" id="dash-cpu-model">Detecting...</h3>
                 <span id="dash-cpu-details">x86-64 Zen 2 Optimizer</span>
               </div>
             </div>
@@ -385,40 +373,40 @@
       </main>
     </div>
 
-    <!-- Live Relinker Terminal Modal (Console HUD) -->
-    <div class="terminal-modal" id="terminal-modal">
-      <div class="terminal-modal-backdrop" id="terminal-modal-close"></div>
-      <div class="terminal-window">
-        <div class="terminal-header">
-          <div class="terminal-title-group">
-            <span class="pulse-indicator"></span>
-            <h3>AnyPS5 Live Compiler Pipeline</h3>
+    <!-- Live Relinker Terminal Modal -->
+    <div class="cyber-modal" id="terminal-modal">
+      <div class="modal-dim" id="terminal-modal-close"></div>
+      <div class="modal-box">
+        <div class="modal-head">
+          <div class="modal-title-wrap">
+            <span class="pulse-lime"></span>
+            <h3>ANYPS5 LIVE COMPILER PIPELINE</h3>
           </div>
-          <button class="btn-close-modal" id="btn-close-term-x">✕</button>
+          <button class="modal-close-btn" id="btn-close-term-x">✕</button>
         </div>
 
         <!-- 5-Step Visual Stepper -->
-        <div class="hud-stepper">
-          <div class="h-step active" id="h-step-1">1. ELF Header</div>
-          <div class="h-line"></div>
-          <div class="h-step" id="h-step-2">2. Intel Codegen</div>
-          <div class="h-line"></div>
-          <div class="h-step" id="h-step-3">3. SysV Dynamics</div>
-          <div class="h-line"></div>
-          <div class="h-step" id="h-step-4">4. Windows PE</div>
-          <div class="h-line"></div>
-          <div class="h-step" id="h-step-5">5. Native Ready</div>
+        <div class="cyber-stepper">
+          <div class="c-step active" id="h-step-1">01. ELF HEADER</div>
+          <div class="c-sep"></div>
+          <div class="c-step" id="h-step-2">02. INTEL CODEGEN</div>
+          <div class="c-sep"></div>
+          <div class="c-step" id="h-step-3">03. SYSV DYNAMICS</div>
+          <div class="c-sep"></div>
+          <div class="c-step" id="h-step-4">04. WINDOWS PE</div>
+          <div class="c-sep"></div>
+          <div class="c-step" id="h-step-5">05. READY</div>
         </div>
 
-        <div class="terminal-console-body" id="live-console-body">
-          <div class="log-row info">[SYS] AnyPort Studio Native Pipeline Initialized.</div>
+        <div class="modal-log-canvas" id="live-console-body">
+          <div class="log-entry info">[SYS] AnyPort Studio Native Pipeline Initialized.</div>
         </div>
 
-        <div class="terminal-footer-bar">
-          <span class="timer-tag" id="terminal-timer">0.0s</span>
-          <div class="term-btn-group">
-            <button class="btn-term-action" id="btn-copy-terminal-logs">Copy Logs</button>
-            <button class="btn-term-action" id="btn-clear-terminal-logs">Clear</button>
+        <div class="modal-foot-bar">
+          <span class="log-timer" id="terminal-timer">0.0s</span>
+          <div class="log-btns">
+            <button class="btn-micro" id="btn-copy-terminal-logs">COPY LOGS</button>
+            <button class="btn-micro" id="btn-clear-terminal-logs">CLEAR</button>
           </div>
         </div>
       </div>
