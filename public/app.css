@@ -767,6 +767,27 @@ body.cyber-body {
   box-shadow: 0 0 15px rgba(191, 255, 0, 0.5);
 }
 
+.btn-card-launch.btn-need-compile {
+  background: var(--neon-violet);
+  color: #fff;
+}
+.btn-card-launch.btn-need-compile:hover {
+  background: var(--neon-violet-bright);
+  box-shadow: 0 0 15px rgba(125, 57, 235, 0.6);
+}
+
+.btn-card-launch.btn-disabled {
+  background: #252530;
+  color: #64748b;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+.btn-card-launch.btn-disabled:hover {
+  background: #252530;
+  transform: none;
+  box-shadow: none;
+}
+
 /* ================= VIEW 2: 1-CLICK PORTER STUDIO ================= */
 .porter-studio-wrap {
   display: flex;
@@ -866,6 +887,13 @@ body.cyber-body {
   gap: 10px;
   margin-bottom: 1.5rem;
   transition: all 0.2s;
+}
+
+.cyber-drop-target.drag-over {
+  border-color: var(--electric-lime);
+  background: rgba(191, 255, 0, 0.08);
+  box-shadow: 0 0 25px rgba(191, 255, 0, 0.3);
+  transform: scale(1.01);
 }
 
 .drop-icon-box {

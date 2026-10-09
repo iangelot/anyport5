@@ -302,9 +302,9 @@
               <div class="radar-card verified">
                 <div class="rc-header">
                   <h3>Dreaming Sarah</h3>
-                  <span class="rc-badge lime">VERIFIED PLAYABLE</span>
+                  <span class="rc-badge lime">COMMUNITY TESTED</span>
                 </div>
-                <p>2D surreal adventure. Officially verified by the AnyPS5 team. Full AGC graphics pass and input hooks operational.</p>
+                <p>2D surreal adventure port fixture. Relinked with AnyPS5 compiler. Tested with native PRX graphics and input subsystem.</p>
                 <div class="rc-footer">
                   <span>Target: PPSA02929</span>
                   <span>Exit: 42 (OK)</span>
@@ -314,9 +314,9 @@
               <div class="radar-card verified">
                 <div class="rc-header">
                   <h3>AnyPS5 Native Test Runner</h3>
-                  <span class="rc-badge lime">VERIFIED PLAYABLE</span>
+                  <span class="rc-badge violet">TEST FIXTURE</span>
                 </div>
-                <p>System V ELF test suite validating POSIX relocations, libScePad gamepad mappings, and dynamic section translation.</p>
+                <p>Upstream System V ELF test suite validating POSIX relocations, libScePad gamepad mappings, and dynamic section translation.</p>
                 <div class="rc-footer">
                   <span>Target: System V Prospero</span>
                   <span>Exit: 0 (OK)</span>
@@ -326,12 +326,12 @@
               <div class="radar-card active">
                 <div class="rc-header">
                   <h3>Sucker Punch Engine (Ghost)</h3>
-                  <span class="rc-badge violet">IN ACTIVE R&D</span>
+                  <span class="rc-badge violet">UPSTREAM R&D</span>
                 </div>
-                <p>Researching DCC retile compute shaders and display-buffer page flipping. Marked as experimental research in AnyPS5.</p>
+                <p>Research tracking for DCC retile compute shaders and display-buffer page flipping. Documented as experimental research in AnyPS5.</p>
                 <div class="rc-footer">
                   <span>Target: Sucker Punch AGC</span>
-                  <span>Status: Commit #903</span>
+                  <span>Status: Experimental</span>
                 </div>
               </div>
             </div>
@@ -405,6 +405,7 @@
         <div class="modal-foot-bar">
           <span class="log-timer" id="terminal-timer">0.0s</span>
           <div class="log-btns">
+            <button class="btn-micro" id="btn-cancel-relink" style="color: #f87171; border-color: rgba(248, 113, 113, 0.4); display: none;">CANCEL JOB</button>
             <button class="btn-micro" id="btn-copy-terminal-logs">COPY LOGS</button>
             <button class="btn-micro" id="btn-clear-terminal-logs">CLEAR</button>
           </div>

@@ -1,6 +1,8 @@
 @echo off
+cd /d "%~dp0"
 echo ===========================================
-echo   Launching Dreaming Sarah (Verified 60FPS Port) via AnyPS5 Native Runtime
+echo   Launching Dreaming Sarah via AnyPS5 Native Runtime
 echo ===========================================
-echo Game process running natively (0% CPU emulation penalty).
-pause
+set PATH=%~dp0libs;%~dp0..\..\bin;%PATH%
+start "" "%~dp0app.exe"
+exit

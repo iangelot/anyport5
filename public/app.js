@@ -4,52 +4,66 @@
 // Typography: Orbitron, Rajdhani, Exo 2
 // ===================================================================
 
-const VERIFIED_PLAYABLE_GAMES = [
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+const DEFAULT_GAMES_METADATA = [
   {
     id: 'dreaming-sarah',
     slug: 'dreaming-sarah',
     title: 'Dreaming Sarah',
     genre: 'Surreal Adventure / Platformer',
-    synopsis: 'PlayStation 5 surreal adventure converted directly into a native Windows x86-64 binary. System V ELF system calls redirected directly into native OS threads with locked 60 FPS performance.',
-    statusBadge: '★ VERIFIED PLAYABLE 60 FPS',
-    tags: ['NATIVE WINDOWS PE', 'AMD ZEN 2 → INTEL LOWERED', '0.0% EMULATION LAG'],
+    synopsis: 'PlayStation 5 surreal adventure converted into a native Windows x86-64 binary. System V ELF system calls redirected directly into native OS threads.',
+    statusBadge: '★ COMMUNITY TESTED',
+    tags: ['NATIVE WINDOWS PE', 'AMD ZEN 2 → INTEL LOWERED', 'HOST-DEPENDENT 60 FPS'],
     backdrop: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1600&q=80',
     thumb: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=400&q=80',
-    stackBadge: '60 FPS LOCKED',
+    stackBadge: 'PORTED PE',
     executablePath: 'games/dreaming-sarah/app.exe',
     folderPath: 'games/dreaming-sarah',
+    isFixture: false,
     verified: true,
-    fps: '60 FPS'
+    fps: 'Target 60 FPS'
   },
   {
-    id: 'sample_game',
+    id: 'sample-game-fixture',
     slug: 'sample_game',
     title: 'AnyPS5 Native Test Runner',
-    genre: 'Sony Prospero ABI Verification',
-    synopsis: 'Official AnyPS5 test suite binary verifying POSIX dynamic linker tables, libScePad gamepad mappings, and libSceVideoOut hooks without any emulation layer.',
-    statusBadge: '✓ TEST SUITE VERIFIED',
+    genre: 'Sony Prospero ABI Test Fixture',
+    synopsis: 'Upstream AnyPS5 test suite binary verifying POSIX dynamic linker tables, libScePad gamepad mappings, and dynamic section translation without emulation layers.',
+    statusBadge: '✓ TEST FIXTURE',
     tags: ['PROSPERO SYSV', 'LIBSCEPAD', 'TEST FIXTURE'],
     backdrop: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=80',
     thumb: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=400&q=80',
-    stackBadge: 'DIRECT ELF',
-    executablePath: 'games/dreaming-sarah/app.exe',
-    folderPath: 'games/dreaming-sarah',
-    verified: true,
-    fps: 'Native 120Hz'
+    stackBadge: 'TEST FIXTURE',
+    executablePath: 'sample_game/input.elf',
+    folderPath: 'sample_game',
+    isFixture: true,
+    verified: false,
+    fps: 'Test Binary'
   }
 ];
 
 let state = {
   activeView: 'library',
-  activeHero: VERIFIED_PLAYABLE_GAMES[0],
-  allGames: [...VERIFIED_PLAYABLE_GAMES],
+  activeHero: DEFAULT_GAMES_METADATA[0],
+  allGames: [...DEFAULT_GAMES_METADATA],
   libraryGames: [],
   systemSpecs: null,
   relinkerStatus: null,
   isRelinking: false,
+  activeJobId: null,
   relinkStartTime: null,
   relinkTimerInterval: null,
-  logLines: []
+  logLines: [],
+  eventSource: null
 };
 
 // DOM References
@@ -100,6 +114,7 @@ const dom = {
   btnCloseTermX: document.getElementById('btn-close-term-x'),
   liveConsoleBody: document.getElementById('live-console-body'),
   terminalTimer: document.getElementById('terminal-timer'),
+  btnCancelRelink: document.getElementById('btn-cancel-relink'),
   btnCopyLogs: document.getElementById('btn-copy-terminal-logs'),
   btnClearLogs: document.getElementById('btn-clear-terminal-logs'),
   steps: [1, 2, 3, 4, 5].map(i => document.getElementById(`h-step-${i}`)),
@@ -113,13 +128,14 @@ const dom = {
 };
 
 // ===================================================================
-// Startup
+// Startup Lifecycle
 // ===================================================================
 
 document.addEventListener('DOMContentLoaded', async () => {
   setupNavigation();
   setupHeroInteractions();
   setupPorterControls();
+  setupDragAndDrop();
   setupTerminalModal();
   setupSearch();
   initEventStream();
@@ -127,8 +143,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadSystemSpecs();
   await loadRelinkerStatus();
   await refreshLibrary();
+  await checkActiveRelinkJob();
 
-  // Inspect sample directory on start
+  // Inspect default fixture directory on startup
   inspectPath('sample_game');
 });
 
@@ -169,6 +186,17 @@ function setupHeroInteractions() {
 
   if (dom.btnHeroPlay) {
     dom.btnHeroPlay.addEventListener('click', () => {
+      if (!state.activeHero) return;
+      if (state.activeHero.isFixture || state.activeHero.fileExists === false) {
+        // Redirect to compiler workspace
+        switchView('porter');
+        if (dom.sourcePathInput) dom.sourcePathInput.value = state.activeHero.folderPath || 'sample_game';
+        if (dom.gameTitleInput) dom.gameTitleInput.value = state.activeHero.title;
+        updateOutputPathPreview();
+        inspectPath(dom.sourcePathInput.value);
+        showToast('Please compile this title before launching.');
+        return;
+      }
       launchGame(state.activeHero.id || state.activeHero.slug);
     });
   }
@@ -185,13 +213,32 @@ function setupHeroInteractions() {
 
   if (dom.btnHeroFolder) {
     dom.btnHeroFolder.addEventListener('click', () => {
-      openFolder(state.activeHero.folderPath || 'games');
+      if (state.activeHero) {
+        openFolder(state.activeHero.folderPath || 'games');
+      }
     });
   }
 
   if (dom.btnHeroSteam) {
-    dom.btnHeroSteam.addEventListener('click', () => {
-      showToast(`Steam Deck shortcut profile generated for "${state.activeHero.title}"`);
+    dom.btnHeroSteam.addEventListener('click', async () => {
+      if (!state.activeHero) return;
+      const gameId = state.activeHero.id || state.activeHero.slug;
+      try {
+        const res = await fetch('/api/export-steam', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ gameId })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showToast(`✓ Steam launcher created at ${data.scriptPath}`);
+          addLogLine('success', `[STEAM] Launcher generated at: ${data.scriptPath}`);
+        } else {
+          showToast(data.error || 'Failed to export Steam launcher');
+        }
+      } catch (err) {
+        showToast(`Steam Export Error: ${err.message}`);
+      }
     });
   }
 }
@@ -204,10 +251,21 @@ function renderHeroStackThumbs() {
     const card = document.createElement('div');
     card.className = `stack-card ${game.id === state.activeHero.id ? 'active' : ''}`;
     card.dataset.game = game.id;
-    card.innerHTML = `
-      <img src="${game.thumb || game.backdrop}" alt="${game.title}">
-      <span class="stack-chip">${game.stackBadge || 'VERIFIED'}</span>
-    `;
+
+    const img = document.createElement('img');
+    img.src = game.thumb || game.backdrop;
+    img.alt = game.title;
+    img.onerror = () => {
+      img.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200"><rect width="400" height="200" fill="%23111116"/><text x="50%" y="50%" fill="%237d39eb" font-family="sans-serif" font-size="16" text-anchor="middle">ANYPORT 5</text></svg>';
+    };
+
+    const chip = document.createElement('span');
+    chip.className = 'stack-chip';
+    chip.textContent = game.stackBadge || (game.isFixture ? 'FIXTURE' : (game.fileExists ? 'READY' : 'UNCOMPILED'));
+
+    card.appendChild(img);
+    card.appendChild(chip);
+
     card.addEventListener('click', () => {
       selectHeroGame(game);
     });
@@ -227,14 +285,33 @@ function selectHeroGame(game) {
   }
 
   if (dom.heroTitle) dom.heroTitle.textContent = game.title;
-  if (dom.heroSynopsis) dom.heroSynopsis.textContent = game.synopsis;
+  if (dom.heroSynopsis) dom.heroSynopsis.textContent = game.synopsis || '';
 
   if (dom.heroPillRow) {
-    const tagsHtml = (game.tags || []).map(t => `<span class="pill-dark">${t}</span>`).join('');
-    dom.heroPillRow.innerHTML = `
-      <span class="pill-verified" id="hero-status-badge">${game.statusBadge}</span>
-      ${tagsHtml}
-    `;
+    dom.heroPillRow.innerHTML = '';
+
+    const statusPill = document.createElement('span');
+    statusPill.className = game.isFixture ? 'pill-violet' : (game.fileExists === false ? 'pill-dark' : 'pill-verified');
+    statusPill.textContent = game.isFixture ? 'TEST FIXTURE' : (game.fileExists === false ? '★ SOURCE READY (UNCOMPILED)' : (game.statusBadge || '★ COMMUNITY TESTED'));
+    dom.heroPillRow.appendChild(statusPill);
+
+    (game.tags || []).forEach(t => {
+      const tagPill = document.createElement('span');
+      tagPill.className = 'pill-dark';
+      tagPill.textContent = t;
+      dom.heroPillRow.appendChild(tagPill);
+    });
+  }
+
+  // Update Hero Play button label based on file availability
+  if (dom.btnHeroPlay) {
+    if (game.isFixture) {
+      dom.btnHeroPlay.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> RELINK TEST FIXTURE`;
+    } else if (game.fileExists === false) {
+      dom.btnHeroPlay.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> COMPILE TO PLAY`;
+    } else {
+      dom.btnHeroPlay.innerHTML = `<svg class="cta-svg" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> PLAY NATIVE PC PORT`;
+    }
   }
 
   const stackCards = document.querySelectorAll('.stack-card');
@@ -244,7 +321,7 @@ function selectHeroGame(game) {
 }
 
 // ===================================================================
-// Games Deck (Only Verified Playable)
+// Games Deck
 // ===================================================================
 
 function renderGamesDeck(filter = '') {
@@ -254,40 +331,80 @@ function renderGamesDeck(filter = '') {
   const q = filter.trim().toLowerCase();
   const filtered = state.allGames.filter(g => {
     if (!q) return true;
-    return g.title.toLowerCase().includes(q) ||
+    return (g.title && g.title.toLowerCase().includes(q)) ||
            (g.genre && g.genre.toLowerCase().includes(q));
   });
 
   if (filtered.length === 0) {
-    dom.gamesGrid.innerHTML = `
-      <div style="grid-column: 1/-1; padding: 3rem; text-align: center; color: var(--text-dim);">
-        <p style="font-family: var(--font-primary); font-size: 1.1rem; margin-bottom: 0.5rem;">No verified PlayStation ports matching "${filter}".</p>
-        <button class="btn-lime-action" onclick="document.getElementById('nav-btn-porter').click()">PORT NEW TITLE</button>
-      </div>
+    const emptyMsg = document.createElement('div');
+    emptyMsg.style.cssText = 'grid-column: 1/-1; padding: 3rem; text-align: center; color: var(--text-dim);';
+    emptyMsg.innerHTML = `
+      <p style="font-family: var(--font-primary); font-size: 1.1rem; margin-bottom: 0.5rem;">No games matching "${escapeHtml(filter)}".</p>
+      <button class="btn-lime-action" id="btn-empty-port">PORT NEW TITLE</button>
     `;
+    dom.gamesGrid.appendChild(emptyMsg);
+    const emptyBtn = emptyMsg.querySelector('#btn-empty-port');
+    if (emptyBtn) emptyBtn.addEventListener('click', () => switchView('porter'));
     return;
   }
 
   filtered.forEach(game => {
     const card = document.createElement('div');
     card.className = 'game-port-card';
-    card.innerHTML = `
-      <div class="card-poster" style="background-image: url('${game.thumb || game.backdrop}');">
-        <div class="card-poster-dim"></div>
-        <div class="card-chips">
-          <span class="card-status-badge">${game.fps || '60 FPS'}</span>
-        </div>
-      </div>
-      <div class="card-body-content">
-        <h3>${game.title}</h3>
-        <span class="card-genre-tag">${game.genre || 'PlayStation 5 Native Port'}</span>
-        <div class="card-actions-row">
-          <button class="btn-card-launch" data-game-id="${game.id}">
-            ▶ PLAY NATIVE PC
-          </button>
-        </div>
-      </div>
-    `;
+
+    // Poster container
+    const poster = document.createElement('div');
+    poster.className = 'card-poster';
+    poster.style.backgroundImage = `url('${game.thumb || game.backdrop}')`;
+
+    const dim = document.createElement('div');
+    dim.className = 'card-poster-dim';
+    poster.appendChild(dim);
+
+    const chips = document.createElement('div');
+    chips.className = 'card-chips';
+
+    const statusBadge = document.createElement('span');
+    statusBadge.className = 'card-status-badge';
+    statusBadge.textContent = game.isFixture ? 'TEST FIXTURE' : (game.fileExists === false ? 'UNCOMPILED' : (game.fps || 'READY'));
+    chips.appendChild(statusBadge);
+    poster.appendChild(chips);
+
+    // Body content
+    const body = document.createElement('div');
+    body.className = 'card-body-content';
+
+    const titleEl = document.createElement('h3');
+    titleEl.textContent = game.title;
+
+    const genreEl = document.createElement('span');
+    genreEl.className = 'card-genre-tag';
+    genreEl.textContent = game.genre || 'PlayStation 5 Native Port';
+
+    const actionsRow = document.createElement('div');
+    actionsRow.className = 'card-actions-row';
+
+    const launchBtn = document.createElement('button');
+    launchBtn.className = 'btn-card-launch';
+    launchBtn.dataset.gameId = game.id;
+
+    if (game.isFixture) {
+      launchBtn.textContent = '⚡ RELINK FIXTURE';
+      launchBtn.classList.add('btn-need-compile');
+    } else if (game.fileExists === false) {
+      launchBtn.textContent = '⚡ COMPILE TO PLAY';
+      launchBtn.classList.add('btn-need-compile');
+    } else {
+      launchBtn.textContent = '▶ PLAY NATIVE PC';
+    }
+
+    actionsRow.appendChild(launchBtn);
+    body.appendChild(titleEl);
+    body.appendChild(genreEl);
+    body.appendChild(actionsRow);
+
+    card.appendChild(poster);
+    card.appendChild(body);
 
     card.addEventListener('click', (e) => {
       if (e.target.closest('.btn-card-launch')) return;
@@ -295,10 +412,18 @@ function renderGamesDeck(filter = '') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
-    const launchBtn = card.querySelector('.btn-card-launch');
     launchBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      launchGame(game.id);
+      if (game.isFixture || game.fileExists === false) {
+        switchView('porter');
+        if (dom.sourcePathInput) dom.sourcePathInput.value = game.folderPath || 'sample_game';
+        if (dom.gameTitleInput) dom.gameTitleInput.value = game.title;
+        updateOutputPathPreview();
+        inspectPath(dom.sourcePathInput.value);
+        showToast('Configure options and click Compile Native Executable.');
+      } else {
+        launchGame(game.id);
+      }
     });
 
     dom.gamesGrid.appendChild(card);
@@ -333,6 +458,41 @@ function setupPorterControls() {
   if (dom.btnExecuteRelink) {
     dom.btnExecuteRelink.addEventListener('click', startRelinking);
   }
+}
+
+function setupDragAndDrop() {
+  const dropzone = dom.dropzone;
+  if (!dropzone) return;
+
+  ['dragenter', 'dragover'].forEach(eventName => {
+    dropzone.addEventListener(eventName, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.classList.add('drag-over');
+    }, false);
+  });
+
+  ['dragleave', 'drop'].forEach(eventName => {
+    dropzone.addEventListener(eventName, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.classList.remove('drag-over');
+    }, false);
+  });
+
+  dropzone.addEventListener('drop', (e) => {
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      const targetPath = file.path || file.name;
+      if (targetPath) {
+        dom.sourcePathInput.value = targetPath;
+        updateOutputPathPreview();
+        inspectPath(targetPath);
+        showToast(`Loaded path: ${targetPath}`);
+      }
+    }
+  });
 }
 
 function updateOutputPathPreview() {
@@ -389,13 +549,16 @@ async function inspectPath(targetPath) {
 // ===================================================================
 
 async function startRelinking() {
-  if (state.isRelinking) return;
+  if (state.isRelinking) {
+    openTerminalModal();
+    return;
+  }
 
   const sourcePath = dom.sourcePathInput.value.trim();
   const gameTitle = dom.gameTitleInput.value.trim() || 'Custom PS5 Port';
 
   if (!sourcePath) {
-    alert('Please enter a game directory or ELF path.');
+    showToast('Please specify a valid game directory or ELF path.');
     return;
   }
 
@@ -403,8 +566,9 @@ async function startRelinking() {
   openTerminalModal();
   setStepperStep(1);
   startTerminalTimer();
+  if (dom.btnCancelRelink) dom.btnCancelRelink.style.display = 'inline-block';
 
-  addLogLine('cmd', `=== Starting AnyPS5 Compiler: ${gameTitle} ===`);
+  addLogLine('cmd', `=== Starting AnyPS5 Relinker: ${gameTitle} ===`);
   addLogLine('info', `Source: ${sourcePath}`);
 
   try {
@@ -412,10 +576,10 @@ async function startRelinking() {
       sourcePath,
       gameTitle,
       targetOS: 'windows',
-      toIntel: dom.flagToIntel.checked,
-      windowsGui: dom.flagGui.checked,
-      windowsDiagnostics: dom.flagDiag.checked,
-      rpath: dom.flagRpath.value.trim() || '$ORIGIN/libs'
+      toIntel: dom.flagToIntel ? dom.flagToIntel.checked : false,
+      windowsGui: dom.flagGui ? dom.flagGui.checked : true,
+      windowsDiagnostics: dom.flagDiag ? dom.flagDiag.checked : false,
+      rpath: dom.flagRpath ? (dom.flagRpath.value.trim() || '$ORIGIN/libs') : '$ORIGIN/libs'
     };
 
     const res = await fetch('/api/relink', {
@@ -429,13 +593,57 @@ async function startRelinking() {
       addLogLine('error', `Error: ${data.error}`);
       stopTerminalTimer();
       state.isRelinking = false;
+      if (dom.btnCancelRelink) dom.btnCancelRelink.style.display = 'none';
       return;
     }
+
+    state.activeJobId = data.jobId;
   } catch (err) {
     addLogLine('error', `Relink initiation error: ${err.message}`);
     stopTerminalTimer();
     state.isRelinking = false;
+    if (dom.btnCancelRelink) dom.btnCancelRelink.style.display = 'none';
   }
+}
+
+async function cancelActiveRelink() {
+  if (!state.isRelinking && !state.activeJobId) return;
+  try {
+    const res = await fetch('/api/relink/cancel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jobId: state.activeJobId })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      showToast('Relinking job cancelled.');
+      addLogLine('error', 'Job cancelled by user.');
+    }
+  } catch (err) {
+    showToast(`Cancel error: ${err.message}`);
+  } finally {
+    state.isRelinking = false;
+    state.activeJobId = null;
+    stopTerminalTimer();
+    if (dom.btnCancelRelink) dom.btnCancelRelink.style.display = 'none';
+    if (dom.terminalPulseDot) dom.terminalPulseDot.style.display = 'none';
+  }
+}
+
+async function checkActiveRelinkJob() {
+  try {
+    const res = await fetch('/api/relink/active');
+    const data = await res.json();
+    if (data.activeJob) {
+      state.isRelinking = true;
+      state.activeJobId = data.activeJob.id;
+      state.relinkStartTime = data.activeJob.startTime;
+      startTerminalTimer();
+      if (dom.terminalPulseDot) dom.terminalPulseDot.style.display = 'block';
+      if (dom.btnCancelRelink) dom.btnCancelRelink.style.display = 'inline-block';
+      addLogLine('info', `Reattached to ongoing compilation job: ${data.activeJob.gameTitle}`);
+    }
+  } catch {}
 }
 
 function setStepperStep(stepNum) {
@@ -456,6 +664,10 @@ function setupTerminalModal() {
   if (dom.btnOpenTerminal) dom.btnOpenTerminal.addEventListener('click', openTerminalModal);
   if (dom.terminalCloseBackdrop) dom.terminalCloseBackdrop.addEventListener('click', closeTerminalModal);
   if (dom.btnCloseTermX) dom.btnCloseTermX.addEventListener('click', closeTerminalModal);
+
+  if (dom.btnCancelRelink) {
+    dom.btnCancelRelink.addEventListener('click', cancelActiveRelink);
+  }
 
   if (dom.btnCopyLogs) {
     dom.btnCopyLogs.addEventListener('click', () => {
@@ -494,7 +706,7 @@ function addLogLine(type, text) {
   const lower = text.toLowerCase();
   if (lower.includes('parsing elf') || lower.includes('header')) {
     setStepperStep(1);
-  } else if (lower.includes('intel') || lower.includes('lowering')) {
+  } else if (lower.includes('intel') || lower.includes('lowering') || lower.includes('to-intel')) {
     setStepperStep(2);
   } else if (lower.includes('reloc') || lower.includes('nid') || lower.includes('sysv')) {
     setStepperStep(3);
@@ -506,7 +718,7 @@ function addLogLine(type, text) {
 }
 
 function startTerminalTimer() {
-  state.relinkStartTime = Date.now();
+  if (!state.relinkStartTime) state.relinkStartTime = Date.now();
   if (state.relinkTimerInterval) clearInterval(state.relinkTimerInterval);
   state.relinkTimerInterval = setInterval(() => {
     const elapsed = ((Date.now() - state.relinkStartTime) / 1000).toFixed(1);
@@ -522,11 +734,16 @@ function stopTerminalTimer() {
 }
 
 // ===================================================================
-// Server-Sent Events
+// Server-Sent Events with Auto-Recovery
 // ===================================================================
 
 function initEventStream() {
+  if (state.eventSource) {
+    try { state.eventSource.close(); } catch {}
+  }
+
   const es = new EventSource('/api/stream');
+  state.eventSource = es;
 
   es.onmessage = (event) => {
     try {
@@ -535,27 +752,39 @@ function initEventStream() {
 
       if (data.type === 'start') {
         setStepperStep(1);
+        state.isRelinking = true;
         if (dom.terminalPulseDot) dom.terminalPulseDot.style.display = 'block';
+        if (dom.btnCancelRelink) dom.btnCancelRelink.style.display = 'inline-block';
       } else if (data.type === 'success') {
         setStepperStep(5);
         stopTerminalTimer();
         state.isRelinking = false;
+        state.activeJobId = null;
         if (dom.terminalPulseDot) dom.terminalPulseDot.style.display = 'none';
+        if (dom.btnCancelRelink) dom.btnCancelRelink.style.display = 'none';
         refreshLibrary();
         showToast('✓ Native Windows executable generated successfully!');
       } else if (data.type === 'error') {
         stopTerminalTimer();
         state.isRelinking = false;
+        state.activeJobId = null;
         if (dom.terminalPulseDot) dom.terminalPulseDot.style.display = 'none';
+        if (dom.btnCancelRelink) dom.btnCancelRelink.style.display = 'none';
       }
 
       addLogLine(data.type, data.text);
     } catch {}
   };
+
+  es.onerror = () => {
+    es.close();
+    // Auto reconnect after 3 seconds
+    setTimeout(initEventStream, 3000);
+  };
 }
 
 // ===================================================================
-// Process Launching
+// Process Launching & Folder Opening
 // ===================================================================
 
 async function launchGame(gameId) {
@@ -570,7 +799,7 @@ async function launchGame(gameId) {
 
     const data = await res.json();
     if (!res.ok) {
-      alert(`Launch error: ${data.error}`);
+      showToast(`Launch failed: ${data.error}`);
       addLogLine('error', `Launch failed: ${data.error}`);
       return;
     }
@@ -578,7 +807,7 @@ async function launchGame(gameId) {
     showToast(`✓ Game launched natively! PID: ${data.pid}`);
     addLogLine('success', `✓ Process active with PID ${data.pid}`);
   } catch (err) {
-    alert(`Could not launch game: ${err.message}`);
+    showToast(`Could not launch game: ${err.message}`);
   }
 }
 
@@ -593,7 +822,7 @@ async function openFolder(targetPath) {
 }
 
 // ===================================================================
-// Specs & Relinker Status
+// Telemetry & Library Refresh
 // ===================================================================
 
 async function loadSystemSpecs() {
@@ -643,40 +872,52 @@ async function refreshLibrary() {
     const libData = await res.json();
     state.libraryGames = libData;
 
-    const merged = [...VERIFIED_PLAYABLE_GAMES];
+    // Build merged view honoring backend filesystem validation
+    const merged = [];
+
+    // Map backend library items first
     libData.forEach(item => {
-      const existing = merged.find(g => g.id === item.id || g.slug === item.slug);
-      if (existing) {
-        existing.executablePath = item.executablePath;
-        existing.verified = true;
-      } else {
-        merged.push({
-          id: item.id || item.slug,
-          slug: item.slug,
-          title: item.title,
-          genre: 'PlayStation 5 Native Port',
-          synopsis: `Custom relinked PS5 title running as native PE at ${item.executablePath}`,
-          statusBadge: '★ CUSTOM PORT',
-          tags: ['NATIVE PE', 'CONVERTED'],
-          backdrop: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1600&q=80',
-          thumb: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=400&q=80',
-          stackBadge: 'PORTED',
-          executablePath: item.executablePath,
-          folderPath: item.gameDir,
-          verified: true,
-          fps: '60 FPS'
-        });
-      }
+      merged.push({
+        id: item.id || item.slug,
+        slug: item.slug || item.id,
+        title: item.title,
+        genre: item.genre || 'PlayStation 5 Native Port',
+        synopsis: item.notes || `Relinked PS5 title at ${item.executablePath}`,
+        statusBadge: item.status || (item.isFixture ? 'TEST FIXTURE' : (item.fileExists ? 'COMMUNITY TESTED' : 'UNCOMPILED')),
+        tags: item.isFixture ? ['TEST FIXTURE', 'PROSPERO SYSV'] : ['NATIVE PE', 'CONVERTED'],
+        backdrop: item.banner || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1600&q=80',
+        thumb: item.banner || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=400&q=80',
+        stackBadge: item.isFixture ? 'FIXTURE' : (item.fileExists ? 'READY' : 'COMPILE'),
+        executablePath: item.executablePath,
+        folderPath: item.folderPath,
+        fileExists: item.fileExists,
+        isFixture: Boolean(item.isFixture),
+        verified: Boolean(item.verified),
+        fps: item.fps || (item.isFixture ? 'Fixture' : 'Target 60 FPS')
+      });
     });
 
+    // Ensure defaults exist if library was empty
+    if (merged.length === 0) {
+      DEFAULT_GAMES_METADATA.forEach(d => merged.push(d));
+    }
+
     state.allGames = merged;
+    if (merged.length > 0) {
+      const currentActiveId = state.activeHero ? state.activeHero.id : null;
+      const found = merged.find(g => g.id === currentActiveId) || merged[0];
+      selectHeroGame(found);
+    }
+
     renderGamesDeck();
     renderHeroStackThumbs();
-  } catch (err) {}
+  } catch (err) {
+    console.error('Error refreshing library:', err);
+  }
 }
 
 // ===================================================================
-// Search
+// Search & Shortcuts
 // ===================================================================
 
 function setupSearch() {
