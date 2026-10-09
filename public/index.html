@@ -113,15 +113,15 @@
 
             <div class="hero-text-block">
               <div class="hero-pill-row">
-                <span class="pill-verified" id="hero-status-badge">★ VERIFIED PLAYABLE 60 FPS</span>
+                <span class="pill-dark" id="hero-status-badge">RELINKED PE (UNTESTED RUN)</span>
                 <span class="pill-dark">NATIVE WINDOWS PE</span>
-                <span class="pill-violet">AMD ZEN 2 → INTEL LOWERED</span>
-                <span class="pill-lime">0.0% EMULATION LAG</span>
+                <span class="pill-violet">UPSTREAM TARGET 60 FPS</span>
+                <span class="pill-lime">NATIVE EXECUTION</span>
               </div>
 
               <h1 class="hero-heading" id="hero-title">Dreaming Sarah</h1>
               <p class="hero-desc" id="hero-synopsis">
-                PlayStation 5 surreal adventure converted directly into a native Windows x86-64 binary. System V ELF system calls redirected directly into native OS threads.
+                PlayStation 5 surreal adventure converted into a native Windows x86-64 binary. System V ELF system calls redirected directly into native OS threads.
               </p>
 
               <div class="hero-cta-row">
@@ -155,8 +155,8 @@
           <div class="library-deck">
             <div class="deck-header">
               <div class="deck-title-group">
-                <h2>VERIFIED PLAYABLE PORTS</h2>
-                <span class="deck-subtitle">Only 100% verified executable native ports. No unplayable mockups or fake stubs.</span>
+                <h2>RELINKED GAME LIBRARY</h2>
+                <span class="deck-subtitle">Locally relinked titles and test fixtures. Frame rates and stability require local execution testing.</span>
               </div>
               <button class="btn-lime-outline" id="btn-quick-port">+ PORT NEW TITLE</button>
             </div>
@@ -269,6 +269,17 @@
                       <span>Location of official AnyPS5 101 PRX system libraries.</span>
                     </div>
                     <input type="text" id="flag-rpath" value="$ORIGIN/libs" class="flag-box-input">
+                  </div>
+
+                  <div class="flag-row">
+                    <div class="flag-desc">
+                      <strong>Module-less Debug Override (<code>--skip-sce-module</code>)</strong>
+                      <span>Debug only: Relink without PRX module directory (unstable/unsupported by upstream).</span>
+                    </div>
+                    <label class="cyber-switch">
+                      <input type="checkbox" id="flag-debug-skip-modules">
+                      <span class="cyber-switch-slider"></span>
+                    </label>
                   </div>
                 </div>
 

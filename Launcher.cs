@@ -187,7 +187,7 @@ namespace AnyPortStudio
                 // Configure WebView2 settings
                 webView.CoreWebView2.Settings.IsStatusBarEnabled = false;
                 webView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = true;
-                webView.CoreWebView2.Settings.AreDevToolsEnabled = true;
+                webView.CoreWebView2.Settings.AreDevToolsEnabled = false;
 
                 // Handle external links (open in user's default browser)
                 webView.CoreWebView2.NewWindowRequested += (s, args) =>
@@ -328,7 +328,12 @@ namespace AnyPortStudio
 
                 using (HttpWebResponse resp = (HttpWebResponse)await req.GetResponseAsync())
                 {
-                    return resp.StatusCode == HttpStatusCode.OK;
+                    if (resp.StatusCode != HttpStatusCode.OK) return false;
+                    using (StreamReader reader = new StreamReader(resp.GetResponseStream()))
+                    {
+                        string body = await reader.ReadToEndAsync();
+                        return body.Contains("\"engine\":\"AnyPS5\"") && body.Contains("\"status\":\"ok\"");
+                    }
                 }
             }
             catch

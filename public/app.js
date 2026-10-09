@@ -21,16 +21,16 @@ const DEFAULT_GAMES_METADATA = [
     title: 'Dreaming Sarah',
     genre: 'Surreal Adventure / Platformer',
     synopsis: 'PlayStation 5 surreal adventure converted into a native Windows x86-64 binary. System V ELF system calls redirected directly into native OS threads.',
-    statusBadge: '★ COMMUNITY TESTED',
-    tags: ['NATIVE WINDOWS PE', 'AMD ZEN 2 → INTEL LOWERED', 'HOST-DEPENDENT 60 FPS'],
+    statusBadge: 'RELINKED PE (UNTESTED RUN)',
+    tags: ['NATIVE WINDOWS PE', 'AMD ZEN 2 → INTEL LOWERED', 'REQUIRES RUNTIME TEST'],
     backdrop: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1600&q=80',
     thumb: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=400&q=80',
     stackBadge: 'PORTED PE',
     executablePath: 'games/dreaming-sarah/app.exe',
     folderPath: 'games/dreaming-sarah',
     isFixture: false,
-    verified: true,
-    fps: 'Target 60 FPS'
+    verified: false,
+    fps: 'Untested (Upstream Target 60 FPS)'
   },
   {
     id: 'sample-game-fixture',
@@ -38,7 +38,7 @@ const DEFAULT_GAMES_METADATA = [
     title: 'AnyPS5 Native Test Runner',
     genre: 'Sony Prospero ABI Test Fixture',
     synopsis: 'Upstream AnyPS5 test suite binary verifying POSIX dynamic linker tables, libScePad gamepad mappings, and dynamic section translation without emulation layers.',
-    statusBadge: '✓ TEST FIXTURE',
+    statusBadge: 'TEST FIXTURE',
     tags: ['PROSPERO SYSV', 'LIBSCEPAD', 'TEST FIXTURE'],
     backdrop: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=80',
     thumb: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=400&q=80',
@@ -47,7 +47,7 @@ const DEFAULT_GAMES_METADATA = [
     folderPath: 'sample_game',
     isFixture: true,
     verified: false,
-    fps: 'Test Binary'
+    fps: 'N/A — Test Fixture'
   }
 ];
 
@@ -63,6 +63,7 @@ let state = {
   relinkStartTime: null,
   relinkTimerInterval: null,
   logLines: [],
+  sessionToken: null,
   eventSource: null
 };
 
@@ -105,6 +106,7 @@ const dom = {
   flagGui: document.getElementById('flag-gui'),
   flagDiag: document.getElementById('flag-diag'),
   flagRpath: document.getElementById('flag-rpath'),
+  flagDebugSkipModules: document.getElementById('flag-debug-skip-modules'),
   previewOutput: document.getElementById('preview-output-path'),
   btnExecuteRelink: document.getElementById('btn-execute-relink'),
 
@@ -127,6 +129,15 @@ const dom = {
   dashCpuDetails: document.getElementById('dash-cpu-details')
 };
 
+// Request header helper
+function getAuthHeaders() {
+  const headers = { 'Content-Type': 'application/json' };
+  if (state.sessionToken) {
+    headers['X-AnyPort-Token'] = state.sessionToken;
+  }
+  return headers;
+}
+
 // ===================================================================
 // Startup Lifecycle
 // ===================================================================
@@ -138,6 +149,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupDragAndDrop();
   setupTerminalModal();
   setupSearch();
+
+  await fetchSessionToken();
   initEventStream();
 
   await loadSystemSpecs();
@@ -148,6 +161,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Inspect default fixture directory on startup
   inspectPath('sample_game');
 });
+
+async function fetchSessionToken() {
+  try {
+    const res = await fetch('/api/session');
+    if (res.ok) {
+      const data = await res.json();
+      state.sessionToken = data.token;
+    }
+  } catch {}
+}
 
 // ===================================================================
 // Dock Navigation
@@ -188,7 +211,6 @@ function setupHeroInteractions() {
     dom.btnHeroPlay.addEventListener('click', () => {
       if (!state.activeHero) return;
       if (state.activeHero.isFixture || state.activeHero.fileExists === false) {
-        // Redirect to compiler workspace
         switchView('porter');
         if (dom.sourcePathInput) dom.sourcePathInput.value = state.activeHero.folderPath || 'sample_game';
         if (dom.gameTitleInput) dom.gameTitleInput.value = state.activeHero.title;
@@ -226,7 +248,7 @@ function setupHeroInteractions() {
       try {
         const res = await fetch('/api/export-steam', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: getAuthHeaders(),
           body: JSON.stringify({ gameId })
         });
         const data = await res.json();
@@ -291,8 +313,8 @@ function selectHeroGame(game) {
     dom.heroPillRow.innerHTML = '';
 
     const statusPill = document.createElement('span');
-    statusPill.className = game.isFixture ? 'pill-violet' : (game.fileExists === false ? 'pill-dark' : 'pill-verified');
-    statusPill.textContent = game.isFixture ? 'TEST FIXTURE' : (game.fileExists === false ? '★ SOURCE READY (UNCOMPILED)' : (game.statusBadge || '★ COMMUNITY TESTED'));
+    statusPill.className = game.isFixture ? 'pill-violet' : (game.fileExists === false ? 'pill-dark' : 'pill-dark');
+    statusPill.textContent = game.isFixture ? 'TEST FIXTURE' : (game.fileExists === false ? '★ SOURCE READY (UNCOMPILED)' : (game.statusBadge || 'RELINKED PE (UNTESTED RUN)'));
     dom.heroPillRow.appendChild(statusPill);
 
     (game.tags || []).forEach(t => {
@@ -303,7 +325,6 @@ function selectHeroGame(game) {
     });
   }
 
-  // Update Hero Play button label based on file availability
   if (dom.btnHeroPlay) {
     if (game.isFixture) {
       dom.btnHeroPlay.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> RELINK TEST FIXTURE`;
@@ -352,7 +373,6 @@ function renderGamesDeck(filter = '') {
     const card = document.createElement('div');
     card.className = 'game-port-card';
 
-    // Poster container
     const poster = document.createElement('div');
     poster.className = 'card-poster';
     poster.style.backgroundImage = `url('${game.thumb || game.backdrop}')`;
@@ -370,7 +390,6 @@ function renderGamesDeck(filter = '') {
     chips.appendChild(statusBadge);
     poster.appendChild(chips);
 
-    // Body content
     const body = document.createElement('div');
     body.className = 'card-body-content';
 
@@ -510,7 +529,7 @@ async function inspectPath(targetPath) {
   try {
     const res = await fetch('/api/scan-path', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ targetPath })
     });
     const data = await res.json();
@@ -523,9 +542,9 @@ async function inspectPath(targetPath) {
       return;
     }
 
-    if (data.hasInputElf || data.hasEboot || (data.elfCandidates && data.elfCandidates.length > 0)) {
-      const elfName = data.hasInputElf ? 'input.elf' : (data.hasEboot ? 'eboot.bin' : data.elfCandidates[0]);
-      dom.hudFormat.textContent = `PS5 ELF (${elfName})`;
+    if (data.elfCandidates && data.elfCandidates.length > 0) {
+      const validCand = data.elfCandidates.find(c => c.valid) || data.elfCandidates[0];
+      dom.hudFormat.textContent = `PS5 ELF (${validCand.name})`;
     } else {
       dom.hudFormat.textContent = 'No ELF Binary';
     }
@@ -533,7 +552,7 @@ async function inspectPath(targetPath) {
     if (data.moduleDirFound) {
       dom.hudModules.textContent = `${data.moduleDirFound}/ (${data.modulesCount} PRX)`;
     } else {
-      dom.hudModules.textContent = 'None (--skip-sce-module)';
+      dom.hudModules.textContent = 'None (Missing Modules)';
     }
 
     dom.hudStatus.textContent = data.validity === 'valid' ? 'Ready to Compile' : data.message;
@@ -579,12 +598,13 @@ async function startRelinking() {
       toIntel: dom.flagToIntel ? dom.flagToIntel.checked : false,
       windowsGui: dom.flagGui ? dom.flagGui.checked : true,
       windowsDiagnostics: dom.flagDiag ? dom.flagDiag.checked : false,
+      allowDebugSkipModules: dom.flagDebugSkipModules ? dom.flagDebugSkipModules.checked : false,
       rpath: dom.flagRpath ? (dom.flagRpath.value.trim() || '$ORIGIN/libs') : '$ORIGIN/libs'
     };
 
     const res = await fetch('/api/relink', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify(payload)
     });
 
@@ -611,7 +631,7 @@ async function cancelActiveRelink() {
   try {
     const res = await fetch('/api/relink/cancel', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ jobId: state.activeJobId })
     });
     const data = await res.json();
@@ -778,7 +798,6 @@ function initEventStream() {
 
   es.onerror = () => {
     es.close();
-    // Auto reconnect after 3 seconds
     setTimeout(initEventStream, 3000);
   };
 }
@@ -793,7 +812,7 @@ async function launchGame(gameId) {
   try {
     const res = await fetch('/api/launch', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ gameId })
     });
 
@@ -815,10 +834,10 @@ async function openFolder(targetPath) {
   try {
     await fetch('/api/open-folder', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ targetPath })
     });
-  } catch (err) {}
+  } catch {}
 }
 
 // ===================================================================
@@ -843,7 +862,7 @@ async function loadSystemSpecs() {
     if (dom.flagToIntel) {
       dom.flagToIntel.checked = data.isIntel;
     }
-  } catch (err) {}
+  } catch {}
 }
 
 async function loadRelinkerStatus() {
@@ -863,7 +882,7 @@ async function loadRelinkerStatus() {
     if (dom.dashPrxCount) {
       dom.dashPrxCount.textContent = `${data.prxCount} Linked`;
     }
-  } catch (err) {}
+  } catch {}
 }
 
 async function refreshLibrary() {
@@ -872,10 +891,8 @@ async function refreshLibrary() {
     const libData = await res.json();
     state.libraryGames = libData;
 
-    // Build merged view honoring backend filesystem validation
     const merged = [];
 
-    // Map backend library items first
     libData.forEach(item => {
       merged.push({
         id: item.id || item.slug,
@@ -883,7 +900,7 @@ async function refreshLibrary() {
         title: item.title,
         genre: item.genre || 'PlayStation 5 Native Port',
         synopsis: item.notes || `Relinked PS5 title at ${item.executablePath}`,
-        statusBadge: item.status || (item.isFixture ? 'TEST FIXTURE' : (item.fileExists ? 'COMMUNITY TESTED' : 'UNCOMPILED')),
+        statusBadge: item.status || (item.isFixture ? 'TEST FIXTURE' : (item.fileExists ? 'RELINKED PE (UNTESTED RUN)' : 'UNCOMPILED')),
         tags: item.isFixture ? ['TEST FIXTURE', 'PROSPERO SYSV'] : ['NATIVE PE', 'CONVERTED'],
         backdrop: item.banner || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=1600&q=80',
         thumb: item.banner || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=400&q=80',
@@ -893,11 +910,10 @@ async function refreshLibrary() {
         fileExists: item.fileExists,
         isFixture: Boolean(item.isFixture),
         verified: Boolean(item.verified),
-        fps: item.fps || (item.isFixture ? 'Fixture' : 'Target 60 FPS')
+        fps: item.fps || (item.isFixture ? 'Fixture' : 'Untested')
       });
     });
 
-    // Ensure defaults exist if library was empty
     if (merged.length === 0) {
       DEFAULT_GAMES_METADATA.forEach(d => merged.push(d));
     }
