@@ -111,6 +111,12 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (pathname === '/api/ping') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ status: 'ok', engine: 'AnyPS5', timestamp: Date.now() }));
+    return;
+  }
+
   if (pathname === '/api/specs' && req.method === 'GET') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(getSystemSpecs()));
@@ -464,10 +470,10 @@ function finalizeGame(outputGameDir, gameSlug, gameTitle, targetOS, exePath) {
   fs.writeFileSync(LIBRARY_FILE, JSON.stringify(library, null, 2));
 }
 
-server.listen(PORT, () => {
+server.listen(PORT, '127.0.0.1', () => {
   console.log(`=======================================================`);
   console.log(` AnyPort Studio - 1-Click AnyPS5 Native Porter`);
-  console.log(` Running at: http://localhost:${PORT}`);
+  console.log(` Running at: http://127.0.0.1:${PORT}`);
   console.log(` AnyPS5 Core: ${ANYPS5_REPO_DIR}`);
   console.log(`=======================================================`);
 });
